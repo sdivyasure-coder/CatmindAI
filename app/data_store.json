@@ -1,0 +1,323 @@
+{
+  "users_db": {
+    "sandeep1012@gmail.com": {
+      "email": "sandeep1012@gmail.com",
+      "password": "sandeep1012"
+    },
+    "john1003@gmail.com": {
+      "email": "john1003@gmail.com",
+      "password": "john1003"
+    },
+    "sandeep26@gmail.com": {
+      "email": "sandeep26@gmail.com",
+      "password": "sandeep26"
+    },
+    "barath123@gmail.com": {
+      "email": "barath123@gmail.com",
+      "password": "barath123"
+    },
+    "gokul2005@gmail.com": {
+      "email": "gokul2005@gmail.com",
+      "password": "gokul123"
+    },
+    "mukesh@gmail.com": {
+      "email": "mukesh@gmail.com",
+      "password": "mukesh123"
+    },
+    "nithish@gmail.com": {
+      "email": "nithish@gmail.com",
+      "password": "nithish123"
+    },
+    "kani@gmail.com": {
+      "email": "kani@gmail.com",
+      "password": "kani123"
+    }
+  },
+  "progress_db": {
+    "sandeep1012@gmail.com": {
+      "Python": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-25T14:38:45.085549",
+        "test_scores": []
+      },
+      "Java": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-25T13:27:19.188841",
+        "test_scores": []
+      }
+    },
+    "john1003@gmail.com": {
+      "Python": {
+        "current_topic": 0,
+        "completed_topics": [
+          "Variables & Types"
+        ],
+        "started_at": "2026-03-15T17:53:12.540089",
+        "test_scores": [
+          80.0
+        ],
+        "attempt_history": [
+          {
+            "topic": "Variables & Types",
+            "score_percentage": 80.0,
+            "passed": true,
+            "submitted_at": "2026-03-15T17:54:28.186249"
+          }
+        ],
+        "last_activity": "2026-03-15T17:54:28.186264"
+      }
+    },
+    "sandeep26@gmail.com": {
+      "Python": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-25T07:30:50.126549",
+        "test_scores": []
+      },
+      "JavaScript": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-17T15:31:59.305644",
+        "test_scores": []
+      },
+      "Java": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-25T07:35:12.080238",
+        "test_scores": []
+      }
+    },
+    "barath123@gmail.com": {},
+    "gokul2005@gmail.com": {},
+    "mukesh@gmail.com": {
+      "Java": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-25T07:39:50.931678",
+        "test_scores": [
+          0.0,
+          60.0
+        ],
+        "attempt_history": [
+          {
+            "topic": "Java Fundamentals & Setup",
+            "score_percentage": 0.0,
+            "passed": false,
+            "submitted_at": "2026-03-25T07:42:02.291522"
+          },
+          {
+            "topic": "Java Fundamentals & Setup",
+            "score_percentage": 60.0,
+            "passed": false,
+            "submitted_at": "2026-03-25T07:43:58.597885"
+          }
+        ],
+        "last_activity": "2026-03-25T07:43:58.597885"
+      }
+    },
+    "nithish@gmail.com": {
+      "Python": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-25T07:44:56.567035",
+        "test_scores": [
+          20.0,
+          0.0,
+          60.0
+        ],
+        "attempt_history": [
+          {
+            "topic": "Fundamentals & Environment",
+            "score_percentage": 20.0,
+            "passed": false,
+            "submitted_at": "2026-03-25T07:46:28.110504"
+          },
+          {
+            "topic": "Fundamentals & Environment",
+            "score_percentage": 0.0,
+            "passed": false,
+            "submitted_at": "2026-03-25T07:48:45.093637"
+          },
+          {
+            "topic": "Fundamentals & Environment",
+            "score_percentage": 60.0,
+            "passed": false,
+            "submitted_at": "2026-03-25T07:50:05.016692"
+          }
+        ],
+        "last_activity": "2026-03-25T07:50:05.016692"
+      },
+      "Java": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-25T07:50:24.555880",
+        "test_scores": [
+          20.0
+        ],
+        "attempt_history": [
+          {
+            "topic": "Java Fundamentals & Setup",
+            "score_percentage": 20.0,
+            "passed": false,
+            "submitted_at": "2026-03-25T07:52:13.793350"
+          }
+        ],
+        "last_activity": "2026-03-25T07:52:13.793350"
+      }
+    },
+    "kani@gmail.com": {
+      "Python": {
+        "current_topic": 0,
+        "completed_topics": [],
+        "started_at": "2026-03-30T12:43:49.819446",
+        "test_scores": []
+      }
+    }
+  },
+  "completion_times_db": {},
+  "debug_attempts_db": {
+    "_rate_limit": {
+      "debug_evaluate:127.0.0.1": [
+        1775101362.0414572,
+        1775101379.3067698,
+        1775101386.5870185,
+        1775101400.397679,
+        1775101411.3759167
+      ]
+    },
+    "sandeep1012@gmail.com": [
+      {
+        "timestamp": "2026-04-02T03:21:26.029400Z",
+        "course": "Python",
+        "task_title": "Fix the adder function",
+        "correct": true,
+        "messages": [
+          "The submitted code correctly fixes the adder function.",
+          "The submitted code follows best practices and is clean and readable."
+        ],
+        "mistakes": [],
+        "tips": [],
+        "corrected_code": "def add(a, b):\n    return a + b",
+        "submitted_code": "def add(a, b):\n    return a + b"
+      },
+      {
+        "timestamp": "2026-04-02T03:42:10.590230Z",
+        "course": "Python",
+        "task_title": "Fix the adder function",
+        "correct": true,
+        "messages": [
+          "The submitted code correctly implements the expected solution.",
+          "Well done on fixing the task!"
+        ],
+        "mistakes": [],
+        "tips": [],
+        "corrected_code": "def add(a, b):\n    return a + b",
+        "submitted_code": "def add(a, b):\n    return a + b"
+      },
+      {
+        "timestamp": "2026-04-02T03:42:26.557731Z",
+        "course": "Python",
+        "task_title": "Fix sum_two",
+        "correct": true,
+        "messages": [
+          "The bug has been fixed successfully!",
+          "No unnecessary corrections have been introduced."
+        ],
+        "mistakes": [],
+        "tips": [],
+        "corrected_code": "def sum_two(x, y):\n    return x + y",
+        "submitted_code": "def sum_two(x, y):\n    return x + y"
+      },
+      {
+        "timestamp": "2026-04-02T03:42:44.067914Z",
+        "course": "Python",
+        "task_title": "Fix combine",
+        "correct": false,
+        "messages": [
+          "Review the code for logic or syntax issues."
+        ],
+        "mistakes": [
+          "The function should return the sum of two numbers, but it's currently subtracting the right number from the left.",
+          "The submitted code is identical to the buggy code and does not fix any issues."
+        ],
+        "tips": [
+          "Review the function's purpose and correct the calculation to match it.",
+          "Compare the submitted code to the expected solution to identify necessary changes."
+        ],
+        "corrected_code": "",
+        "submitted_code": "def combine(left, right)\n    return left - right"
+      },
+      {
+        "timestamp": "2026-04-02T03:43:01.066090Z",
+        "course": "Python",
+        "task_title": "Fix combine",
+        "correct": false,
+        "messages": [
+          "Review the code for logic or syntax issues."
+        ],
+        "mistakes": [
+          "Expected '+' operation but got '-' instead.",
+          "Submitted code has a semicolon at the end of the line, which is unnecessary in Python.",
+          "Submitted code is identical to the buggy code."
+        ],
+        "tips": [
+          "Make sure to understand the task description before starting to code.",
+          "Check the operation between 'left' and 'right' variables and change it to '+' as expected by the task.",
+          "Remove unnecessary characters like semicolons."
+        ],
+        "corrected_code": "",
+        "submitted_code": "def combine(left, right):\n    return left - right;"
+      },
+      {
+        "timestamp": "2026-04-02T03:43:08.085958Z",
+        "course": "Python",
+        "task_title": "Fix combine",
+        "correct": true,
+        "messages": [
+          "The submitted code successfully fixes the bug by adding the numbers instead of subtracting."
+        ],
+        "mistakes": [],
+        "tips": [
+          "Make sure to keep your variable names descriptive to avoid confusion with other variables in large codebases."
+        ],
+        "corrected_code": "def combine(left, right):\n    return left + right",
+        "submitted_code": "def combine(left, right):\n    return left + right;"
+      },
+      {
+        "timestamp": "2026-04-02T03:43:22.466013Z",
+        "course": "Python",
+        "task_title": "Fix total",
+        "correct": false,
+        "messages": [
+          "Review the code for logic or syntax issues."
+        ],
+        "mistakes": [
+          "Incorrect operator for addition in return statement (expected +, found -)",
+          "Missing colon at the end of def statement is not an issue, but the trailing semicolon in return statement is unnecessary and might cause future issues or syntax errors"
+        ],
+        "tips": [
+          "Review basic arithmetic operators in Python and ensure correct usage.",
+          "Follow PEP 8 style guide for coding conventions, such as omitting redundant semicolons."
+        ],
+        "corrected_code": "def total(num1, num2):\n    return num1 + num2",
+        "submitted_code": "def total(num1, num2):\n    return num1 + num2;"
+      },
+      {
+        "timestamp": "2026-04-02T03:43:32.808506Z",
+        "course": "Python",
+        "task_title": "Fix total",
+        "correct": true,
+        "messages": [
+          "The submitted code successfully fixes the bug.",
+          "The fix is identical to the expected solution."
+        ],
+        "mistakes": [],
+        "tips": [],
+        "corrected_code": "",
+        "submitted_code": "def total(num1, num2):\n    return num1 + num2"
+      }
+    ]
+  }
+}

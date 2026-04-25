@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Smart AI Learning</title>
+    <style>
+        :root{
+            --bg:#060d1c;
+            --panel:#0d1830;
+            --panel2:#101f3c;
+            --line:rgba(255,255,255,0.12);
+            --text:#e7f1ff;
+            --muted:#9fb0d4;
+            --neon:#5ff0ff;
+            --gold:#ffd166;
+            --green:#53f3a6;
+            --pink:#ff6fd8;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+            min-height:100vh;
+            padding:20px;
+            color:var(--text);
+            background:
+                radial-gradient(900px 500px at 0% -10%, #1e2f5f 0%, transparent 60%),
+                radial-gradient(700px 500px at 100% 10%, #361857 0%, transparent 60%),
+                linear-gradient(180deg, #050913 0%, #060d1c 100%);
+        }
+        nav{
+            background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            border:1px solid var(--line);
+            padding:14px 20px;
+            border-radius:14px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:22px;
+            backdrop-filter: blur(10px);
+        }
+        .nav-left{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+        .back-btn{
+            padding:8px 12px;
+            border:1px solid var(--line);
+            border-radius:10px;
+            background:rgba(255,255,255,0.05);
+            color:var(--text);
+            cursor:pointer;
+            font-weight:600;
+            transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+        .back-btn:hover{
+            transform:translateY(-1px);
+            background:rgba(255,255,255,0.08);
+            box-shadow:0 8px 18px rgba(0,0,0,0.2);
+        }
+        nav h1{color:var(--text);font-size:22px}
+        nav a{color:var(--neon);margin:0 10px;text-decoration:none;cursor:pointer;font-weight:600}
+        .container{max-width:960px;margin:0 auto}
+        .course-strip{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            align-items:center;
+            margin-bottom:16px;
+        }
+        .course-label{
+            font-size:12px;
+            text-transform:uppercase;
+            letter-spacing:0.8px;
+            color:var(--muted);
+        }
+        .course-list{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+        .course-note{
+            font-size:12px;
+            color:var(--muted);
+        }
+        .filter-pill{
+            border:1px solid var(--line);
+            border-radius:999px;
+            padding:6px 12px;
+            cursor:pointer;
+            background:rgba(255,255,255,0.03);
+            color:var(--text);
+            font-size:12px;
+            font-weight:600;
+            transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        .filter-pill.active{
+            border-color:rgba(83,243,166,0.6);
+            color:var(--green);
+            box-shadow:0 0 12px rgba(83,243,166,0.35);
+        }
+        .filter-pill.disabled{
+            opacity:0.5;
+            cursor:not-allowed;
+        }
+        .course-pill{
+            border:1px solid var(--line);
+            border-radius:999px;
+            padding:6px 12px;
+            cursor:pointer;
+            background:rgba(255,255,255,0.03);
+            color:var(--text);
+            font-size:12px;
+            font-weight:600;
+            transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        .course-pill:hover{
+            transform:translateY(-1px);
+            box-shadow:0 8px 16px rgba(0,0,0,0.22);
+        }
+        .course-pill.active{
+            border-color:rgba(95,240,255,0.6);
+            color:var(--neon);
+            box-shadow:0 0 12px rgba(95,240,255,0.35);
+        }
+        h2{
+            text-align:center;
+            margin-bottom:18px;
+            font-size:30px;
+            letter-spacing:0.4px;
+            text-shadow:0 0 18px rgba(95,240,255,0.45);
+        }
+        .arena{
+            border:1px solid var(--line);
+            border-radius:18px;
+            padding:18px;
+            background:linear-gradient(180deg, rgba(16,31,60,0.9), rgba(13,24,48,0.92));
+            box-shadow:0 18px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        .leaderboard-container{
+            border:1px solid rgba(95,240,255,0.3);
+            border-radius:14px;
+            overflow:hidden;
+            background:linear-gradient(180deg, rgba(5,11,24,0.65), rgba(7,14,29,0.8));
+        }
+        .leaderboard-header{
+            display:grid;
+            grid-template-columns:90px 1fr 190px;
+            gap:14px;
+            padding:14px 18px;
+            background:linear-gradient(90deg, rgba(95,240,255,0.15), rgba(255,111,216,0.15));
+            border-bottom:1px solid var(--line);
+            font-size:13px;
+            text-transform:uppercase;
+            letter-spacing:0.8px;
+            color:var(--muted);
+            font-weight:700;
+        }
+        .leaderboard-note{
+            margin-top:10px;
+            font-size:12px;
+            color:var(--muted);
+            text-align:right;
+        }
+        .leaderboard-row{
+            display:grid;
+            grid-template-columns:90px 1fr 190px;
+            gap:14px;
+            padding:16px 18px;
+            align-items:center;
+            background:linear-gradient(180deg, rgba(13,24,48,0.92), rgba(10,20,40,0.92));
+        }
+        .leaderboard-row.current-user{
+            border-top:1px solid rgba(83,243,166,0.45);
+            border-bottom:1px solid rgba(83,243,166,0.45);
+        }
+        .rank{
+            width:62px;height:62px;border-radius:50%;
+            display:grid;place-items:center;
+            border:2px solid var(--gold);
+            color:var(--gold);
+            font-weight:800;
+            font-size:22px;
+            box-shadow:0 0 16px rgba(255,209,102,0.35);
+            background:radial-gradient(circle at 30% 20%, rgba(255,209,102,0.18), rgba(255,209,102,0.02));
+        }
+        .name{font-weight:700;font-size:18px}
+        .score{
+            text-align:right;
+            color:var(--green);
+            font-weight:800;
+            font-size:28px;
+            text-shadow:0 0 14px rgba(83,243,166,0.45);
+        }
+        .player-sub{font-size:12px;color:var(--muted);margin-top:4px}
+        .stats{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+        .chip{
+            font-size:12px;
+            padding:6px 10px;
+            border-radius:999px;
+            border:1px solid var(--line);
+            background:rgba(255,255,255,0.03);
+            color:var(--muted);
+        }
+        .xp-wrap{
+            margin-top:12px;
+            background:rgba(255,255,255,0.06);
+            border:1px solid var(--line);
+            border-radius:999px;
+            height:12px;
+            overflow:hidden;
+        }
+        .xp-bar{
+            height:100%;
+            width:0%;
+            background:linear-gradient(90deg, var(--neon), var(--pink));
+            box-shadow:0 0 14px rgba(95,240,255,0.5);
+            transition:width 700ms ease;
+        }
+        @media (max-width: 700px){
+            .leaderboard-header,.leaderboard-row{grid-template-columns:70px 1fr 130px}
+            .score{font-size:22px}
+            .name{font-size:16px}
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-left">
+            <button class="back-btn" onclick="goBack('dashboard.html')">← Back</button>
+            <h1>Smart AI Learning</h1>
+        </div>
+        <div>
+            <a onclick="window.location.href='dashboard.html'">Dashboard</a>
+            <a onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="course-strip">
+            <div class="course-label">Courses</div>
+            <div class="course-list" id="courseList">
+                <div class="course-pill active">All Courses</div>
+            </div>
+            <button class="filter-pill" id="completedToggle" type="button">Completed Only</button>
+            <div class="course-note">Course leaderboards show all learners enrolled in that course.</div>
+        </div>
+        <h2 id="leaderboardTitle">Leaderboard Arena</h2>
+        <div class="arena">
+            <div class="leaderboard-container">
+                <div class="leaderboard-header">
+                    <div>Rank</div>
+                    <div>Player</div>
+                    <div style="text-align:right">Points</div>
+                </div>
+                <div id="leaderboardBody"></div>
+            </div>
+            <div class="leaderboard-note" id="leaderboardNote"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const userEmail = String(localStorage.getItem('email') || '').trim().toLowerCase();
+        let activeCourse = 'all';
+        const TOP_LIMIT = 10;
+        let showCompletedOnly = false;
+        const completedToggle = document.getElementById('completedToggle');
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function goBack(fallback) {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = fallback;
+            }
+        }
+
+        function scoreToPoints(user) {
+            if (typeof user.points === 'number' && Number.isFinite(user.points)) {
+                return Math.max(0, Math.round(user.points));
+            }
+            const avg = Number(user.average_score || 0);
+            const topics = Number(user.total_topics_completed || 0);
+            const passed = Number(user.total_tests_passed || 0);
+            return Math.max(0, Math.round((avg * 10) + (topics * 25) + (passed * 40)));
+        }
+        function renderLeaderboard(list, currentEmail, options = {}) {
+            const body = document.getElementById('leaderboardBody');
+            const note = document.getElementById('leaderboardNote');
+            body.innerHTML = '';
+
+            const safeList = Array.isArray(list) ? list : [];
+            const displayList = options.completedOnly
+                ? safeList.filter((u) => u && u.completed === true)
+                : safeList;
+            const hasList = displayList.length > 0;
+
+            const scoredAll = safeList.map((user) => ({ user, points: scoreToPoints(user) }));
+            const scored = hasList ? displayList.map((user) => ({ user, points: scoreToPoints(user) })) : [];
+            const maxPointsAll = scoredAll.length ? Math.max(0, ...scoredAll.map((item) => item.points)) : 0;
+            const maxPoints = scored.length ? Math.max(0, ...scored.map((item) => item.points)) : 0;
+            const topScored = scored.slice(0, TOP_LIMIT);
+
+            if (!hasList) {
+                if (!currentEmail && !options.userEntry) {
+                    const row = document.createElement('div');
+                    row.className = 'leaderboard-row current-user';
+                    row.innerHTML = `
+                        <div class="rank">-</div>
+                        <div>
+                            <div class="name">Current user</div>
+                            <div class="player-sub">No leaderboard data yet</div>
+                            <div class="stats">
+                                <span class="chip">Win Rate 0%</span>
+                                <span class="chip">Topics 0</span>
+                                <span class="chip">Passed 0</span>
+                            </div>
+                            <div class="xp-wrap"><div class="xp-bar" style="width:0%"></div></div>
+                        </div>
+                        <div class="score">0</div>
+                    `;
+                    body.appendChild(row);
+                }
+            } else {
+                topScored.forEach((entry, index) => {
+                    const user = entry.user;
+                    const points = entry.points;
+                    const emailValue = user.email || user.user_email || '';
+                    const email = String(emailValue).trim().toLowerCase();
+                    const row = document.createElement('div');
+                    row.className = email === currentEmail ? 'leaderboard-row current-user' : 'leaderboard-row';
+
+                    const avg = Number(user.average_score || 0);
+                    const topics = Number(user.total_topics_completed || 0);
+                    const passed = Number(user.total_tests_passed || 0);
+                    const attempts = Number(user.total_test_attempts || 0);
+                    const winRate = attempts > 0 ? Math.round((passed / attempts) * 100) : 0;
+                    const level = Math.max(1, Math.floor(points / 500) + 1);
+                    const xpPct = maxPoints > 0 ? Math.min(100, (points / maxPoints) * 100) : 0;
+
+                    const displayRank = options.completedOnly ? (index + 1) : (user.rank || (index + 1));
+                    row.innerHTML = `
+                        <div class="rank">${displayRank}</div>
+                        <div>
+                            <div class="name">${emailValue || 'User'}</div>
+                            <div class="player-sub">Level ${level} Challenger ? Avg Score ${avg.toFixed(1)}%</div>
+                            <div class="stats">
+                                <span class="chip">Win Rate ${winRate}%</span>
+                                <span class="chip">Topics ${topics}</span>
+                                <span class="chip">Passed ${passed}/${attempts}</span>
+                            </div>
+                            <div class="xp-wrap"><div class="xp-bar" style="width:${xpPct}%"></div></div>
+                        </div>
+                        <div class="score">${points.toLocaleString()}</div>
+                    `;
+                    body.appendChild(row);
+                });
+            }
+
+            let userEntry = options.userEntry;
+            let userRank = options.userRank;
+            if (!userEntry && currentEmail) {
+                const match = safeList.find((u) => String(u.email || u.user_email || '').trim().toLowerCase() === currentEmail);
+                if (match) {
+                    userEntry = match;
+                    userRank = match.rank || (safeList.indexOf(match) + 1);
+                }
+            }
+
+            const currentInTop = topScored.some((entry) => {
+                const emailValue = entry.user.email || entry.user.user_email || '';
+                return String(emailValue).trim().toLowerCase() === currentEmail;
+            });
+
+            if (!currentInTop && currentEmail) {
+                const row = document.createElement('div');
+                row.className = 'leaderboard-row current-user';
+
+                const emailValue = userEntry ? (userEntry.email || userEntry.user_email || '') : currentEmail;
+                const avg = Number((userEntry && userEntry.average_score) || 0);
+                const topics = Number((userEntry && userEntry.total_topics_completed) || 0);
+                const passed = Number((userEntry && userEntry.total_tests_passed) || 0);
+                const attempts = Number((userEntry && userEntry.total_test_attempts) || 0);
+                const winRate = attempts > 0 ? Math.round((passed / attempts) * 100) : 0;
+                const points = scoreToPoints(userEntry || {});
+                const level = Math.max(1, Math.floor(points / 500) + 1);
+                const xpPct = (maxPointsAll > 0 ? Math.min(100, (points / maxPointsAll) * 100) : 0);
+                let rankLabel = userRank ? String(userRank) : '--';
+                let subNote = 'Your current position';
+                if (options.completedOnly) {
+                    if (userEntry && userEntry.completed === true) {
+                        const completedIndex = displayList.findIndex((u) => String(u.email || u.user_email || '').trim().toLowerCase() === currentEmail);
+                        rankLabel = completedIndex >= 0 ? String(completedIndex + 1) : '--';
+                        subNote = 'Completed leaderboard position';
+                    } else {
+                        rankLabel = '--';
+                        subNote = 'Complete the course to appear in completed-only list';
+                    }
+                } else if (userEntry && userEntry.completed === false && options.activeCourse !== 'all') {
+                    subNote = 'Complete the course to climb faster';
+                }
+
+                row.innerHTML = `
+                    <div class="rank">${rankLabel}</div>
+                    <div>
+                        <div class="name">${emailValue}</div>
+                        <div class="player-sub">${subNote} · Avg Score ${avg.toFixed(1)}%</div>
+                        <div class="stats">
+                            <span class="chip">Win Rate ${winRate}%</span>
+                            <span class="chip">Topics ${topics}</span>
+                            <span class="chip">Passed ${passed}/${attempts}</span>
+                        </div>
+                        <div class="xp-wrap"><div class="xp-bar" style="width:${xpPct}%"></div></div>
+                    </div>
+                    <div class="score">${points.toLocaleString()}</div>
+                `;
+                body.appendChild(row);
+            }
+
+            if (note) {
+                const shown = hasList ? Math.min(TOP_LIMIT, displayList.length) : 0;
+                const total = options.totalLearners || safeList.length;
+                let resolvedRank = userRank || options.userRank;
+                if (options.completedOnly && userEntry && userEntry.completed === true) {
+                    const completedIndex = displayList.findIndex((u) => String(u.email || u.user_email || '').trim().toLowerCase() === currentEmail);
+                    resolvedRank = completedIndex >= 0 ? (completedIndex + 1) : null;
+                } else if (options.completedOnly) {
+                    resolvedRank = null;
+                }
+                const rankText = resolvedRank ? ` · Your position #${resolvedRank}` : '';
+                if (!hasList && total > 0) {
+                    note.textContent = options.completedOnly
+                        ? `No completed learners yet · ${total} learners enrolled`
+                        : `No leaderboard data yet · ${total} learners enrolled${rankText}`;
+                } else if (!hasList) {
+                    note.textContent = 'No leaderboard data yet.';
+                } else {
+                    const filterText = options.completedOnly ? ' (completed only)' : '';
+                    note.textContent = `Showing top ${shown} of ${total} learners${filterText}${rankText}`;
+                }
+            }
+        }
+
+        function setActiveCourse(courseName) {
+            activeCourse = courseName || 'all';
+            const title = document.getElementById('leaderboardTitle');
+            title.textContent = activeCourse === 'all'
+                ? 'Leaderboard Arena'
+                : `Leaderboard Arena · ${activeCourse}`;
+            document.querySelectorAll('.course-pill').forEach((pill) => {
+                pill.classList.toggle('active', pill.dataset.course === activeCourse);
+            });
+            updateCompletedToggle();
+            loadLeaderboard();
+        }
+
+        function updateCompletedToggle() {
+            if (!completedToggle) return;
+            const disabled = activeCourse === 'all';
+            completedToggle.classList.toggle('disabled', disabled);
+            if (disabled) {
+                showCompletedOnly = false;
+            }
+            completedToggle.classList.toggle('active', showCompletedOnly);
+        }
+
+        if (completedToggle) {
+            completedToggle.onclick = () => {
+                if (activeCourse === 'all') return;
+                showCompletedOnly = !showCompletedOnly;
+                updateCompletedToggle();
+                loadLeaderboard();
+            };
+        }
+
+        function renderCourseList(courses) {
+            const list = document.getElementById('courseList');
+            list.innerHTML = '';
+
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.className = 'course-pill';
+            allBtn.textContent = 'All Courses';
+            allBtn.dataset.course = 'all';
+            allBtn.onclick = () => setActiveCourse('all');
+            list.appendChild(allBtn);
+
+            courses.forEach((course) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'course-pill';
+                btn.textContent = course;
+                btn.dataset.course = course;
+                btn.onclick = () => setActiveCourse(course);
+                list.appendChild(btn);
+            });
+        }
+
+        async function loadCourses() {
+            try {
+                const response = await fetch(`${API_URL}/languages`);
+                if (!response.ok) throw new Error('Failed to load courses');
+                const data = await response.json();
+                const courses = Array.isArray(data.details)
+                    ? data.details.map((item) => item.name).filter(Boolean)
+                    : Array.isArray(data.languages) ? data.languages : [];
+                renderCourseList(courses);
+                if (courses.length) {
+                    setActiveCourse(courses[0]);
+                } else {
+                    setActiveCourse('all');
+                }
+            } catch (error) {
+                renderCourseList([]);
+                setActiveCourse('all');
+            }
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const url = activeCourse === 'all'
+                    ? `${API_URL}/leaderboard`
+                    : `${API_URL}/leaderboard/course/${encodeURIComponent(activeCourse)}?user_email=${encodeURIComponent(userEmail)}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch leaderboard');
+                const data = await response.json();
+                const list = Array.isArray(data.leaderboard) ? data.leaderboard : [];
+                renderLeaderboard(list, userEmail, {
+                    userEntry: data.user_entry || null,
+                    userRank: data.user_rank || null,
+                    totalLearners: data.total_learners || null,
+                    completedOnly: showCompletedOnly,
+                    activeCourse
+                });
+            } catch (error) {
+                renderLeaderboard([], userEmail);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = 'index.html';
+        }
+
+        loadCourses();
+    </script>
+</body>
+</html>
+
+

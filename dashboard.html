@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Smart AI Learning</title>
+    <style>
+        :root{
+            --bg:#060d1c;
+            --panel:#0f1b36;
+            --panel-soft:#122246;
+            --line:rgba(255,255,255,0.12);
+            --text:#e9f2ff;
+            --muted:#9cb0d7;
+            --neon:#5df1ff;
+            --purple:#a56dff;
+            --green:#56f3a7;
+            --orange:#ffc260;
+            --pink:#ff6fd8;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+            min-height:100vh;
+            color:var(--text);
+            padding:20px;
+            background:
+                radial-gradient(1000px 600px at 0% -20%, #1d3366 0%, transparent 60%),
+                radial-gradient(900px 520px at 100% 5%, #3e1f65 0%, transparent 62%),
+                linear-gradient(180deg, #050913 0%, #060d1c 100%);
+        }
+        .bg-grid{
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 28px 28px;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            opacity:.6;
+        }
+        nav{
+            max-width:1200px;
+            margin:0 auto 20px auto;
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:14px 18px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            backdrop-filter: blur(10px);
+            background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+        }
+        .nav-left{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+        .back-btn{
+            padding:8px 12px;
+            border:1px solid var(--line);
+            border-radius:10px;
+            background:rgba(255,255,255,0.05);
+            color:var(--text);
+            cursor:pointer;
+            font-weight:600;
+            transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+        .back-btn:hover{
+            transform:translateY(-1px);
+            background:rgba(255,255,255,0.08);
+            box-shadow:0 8px 18px rgba(0,0,0,0.2);
+        }
+        nav h1{
+            font-size:28px;
+            letter-spacing:0.3px;
+            color:var(--text);
+            text-shadow:0 0 14px rgba(93,241,255,0.35);
+        }
+        nav .user-info{display:flex;gap:14px;align-items:center}
+        #userEmail{
+            color:var(--muted);
+            font-size:14px;
+            border:1px solid var(--line);
+            border-radius:999px;
+            padding:8px 12px;
+            background:rgba(255,255,255,0.03);
+            max-width:300px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+        nav button{
+            padding:10px 14px;
+            border:none;
+            border-radius:10px;
+            color:#fff;
+            cursor:pointer;
+            font-weight:700;
+            background:linear-gradient(135deg, #ff664f 0%, #ff3d7a 100%);
+            box-shadow:0 8px 18px rgba(255,61,122,0.28);
+        }
+        .container{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+        .hero{
+            border:1px solid var(--line);
+            border-radius:20px;
+            padding:20px;
+            margin-bottom:20px;
+            background:
+                radial-gradient(360px 140px at 8% 0%, rgba(93,241,255,0.2), transparent 70%),
+                radial-gradient(420px 170px at 100% 100%, rgba(165,109,255,0.22), transparent 70%),
+                linear-gradient(180deg, rgba(18,34,70,0.92), rgba(14,26,52,0.95));
+            box-shadow:0 16px 36px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
+        }
+        .hero h2{font-size:30px;margin-bottom:6px}
+        .hero p{color:var(--muted)}
+        .stats{
+            display:grid;
+            grid-template-columns:repeat(4,minmax(0,1fr));
+            gap:14px;
+            margin-bottom:22px;
+        }
+        .stat{
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:18px;
+            text-align:center;
+            background:linear-gradient(180deg, rgba(16,30,60,0.9), rgba(10,19,38,0.95));
+            box-shadow:0 12px 24px rgba(0,0,0,0.25);
+        }
+        .stat .number{font-size:38px;font-weight:800;line-height:1.1;margin-bottom:8px}
+        .stat .label{color:var(--muted);font-size:13px;letter-spacing:.4px;text-transform:uppercase}
+        .stat.topics .number{color:var(--neon);text-shadow:0 0 12px rgba(93,241,255,0.45)}
+        .stat.score .number{color:var(--green);text-shadow:0 0 12px rgba(86,243,167,0.45)}
+        .stat.streak .number{color:var(--orange);text-shadow:0 0 12px rgba(255,194,96,0.45)}
+        .stat.rank .number{color:var(--pink);text-shadow:0 0 12px rgba(255,111,216,0.45)}
+        .cards{
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:14px;
+        }
+        .card{
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:18px;
+            background:linear-gradient(180deg, rgba(17,31,61,0.9), rgba(11,20,40,0.95));
+            box-shadow:0 10px 22px rgba(0,0,0,0.24);
+            position:relative;
+            overflow:hidden;
+        }
+        .card::before{
+            content:"";
+            position:absolute;
+            width:180px;height:180px;border-radius:50%;
+            background:radial-gradient(circle, rgba(93,241,255,0.22), transparent 70%);
+            top:-90px;right:-70px;
+            pointer-events:none;
+        }
+        .card h2{font-size:38px;line-height:1;margin-bottom:10px}
+        .card h3{font-size:34px;margin-bottom:10px}
+        .card p{color:var(--muted);line-height:1.5;min-height:68px}
+        .cta-button{
+            width:100%;
+            padding:13px 14px;
+            border:none;
+            border-radius:12px;
+            color:#fff;
+            font-size:16px;
+            font-weight:700;
+            cursor:pointer;
+            margin-top:12px;
+            letter-spacing:.3px;
+            transition:transform .18s ease, box-shadow .18s ease;
+            background:linear-gradient(135deg, #3a7bff 0%, #8a4dff 100%);
+            box-shadow:0 10px 20px rgba(58,123,255,0.3);
+        }
+        .cta-button:hover{transform:translateY(-2px);box-shadow:0 14px 26px rgba(58,123,255,0.42)}
+
+        @media (max-width: 1024px){
+            .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+            .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+        }
+        @media (max-width: 680px){
+            body{padding:12px}
+            nav{padding:12px;flex-direction:column;align-items:flex-start;gap:10px}
+            nav h1{font-size:24px}
+            .hero h2{font-size:24px}
+            .stats{grid-template-columns:1fr}
+            .cards{grid-template-columns:1fr}
+            .card p{min-height:0}
+            #userEmail{max-width:100%}
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <nav>
+        <div class="nav-left">
+            <button class="back-btn" onclick="goBack('index.html')">← Back</button>
+            <h1>Smart AI Learning</h1>
+        </div>
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h2>Mission Control</h2>
+            <p>Track your journey, complete challenges, and climb your personal rank ladder.</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat topics">
+                <div class="number" id="topicsCompleted">0</div>
+                <div class="label">Topics Completed</div>
+            </div>
+            <div class="stat score">
+                <div class="number" id="testsScore">0%</div>
+                <div class="label">Average Score</div>
+            </div>
+            <div class="stat streak">
+                <div class="number" id="streak">0</div>
+                <div class="label">Current Streak</div>
+            </div>
+            <div class="stat rank">
+                <div class="number" id="rank">#--</div>
+                <div class="label">Leaderboard Rank</div>
+            </div>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <h2>&#128218;</h2>
+                <h3>Learn New Topics</h3>
+                <p>Explore programming languages and topic paths with AI-guided missions.</p>
+                <button class="cta-button" onclick="window.location.href='courses.html'">Browse Courses</button>
+            </div>
+
+            <div class="card">
+                <h2>&#9989;</h2>
+                <h3>Take Tests</h3>
+                <p>Challenge yourself with quizzes, instant feedback, and score progression.</p>
+                <button class="cta-button" onclick="window.location.href='tests.html'">View Tests</button>
+            </div>
+
+            <div class="card">
+                <h2>&#127942;</h2>
+                <h3>Leaderboard</h3>
+                <p>Open your arena profile and watch your points evolve over time.</p>
+                <button class="cta-button" onclick="window.location.href='leaderboard.html'">View Rankings</button>
+            </div>
+
+            <div class="card">
+                <h2>&#128202;</h2>
+                <h3>Analytics</h3>
+                <p>Inspect your performance trends and identify your next skill upgrades.</p>
+                <button class="cta-button" onclick="window.location.href='analytics.html'">View Analytics</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const email = String(localStorage.getItem('email') || '').trim().toLowerCase();
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('userEmail').textContent = email || 'User';
+
+        function goBack(fallback) {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = fallback;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = 'index.html';
+        }
+
+        async function initDashboard() {
+            try {
+                const progressResponse = await fetch(`${API_URL}/progress/${email}`);
+                if (!progressResponse.ok) {
+                    throw new Error('Failed to fetch progress');
+                }
+                const progressData = await progressResponse.json();
+
+                const leaderboardResponse = await fetch(`${API_URL}/leaderboard`);
+                if (!leaderboardResponse.ok) {
+                    throw new Error('Failed to fetch leaderboard');
+                }
+                const leaderboardData = await leaderboardResponse.json();
+
+                let topicsCompleted = 0;
+                let totalScore = 0;
+                let testCount = 0;
+
+                if (progressData.progress) {
+                    for (const [, data] of Object.entries(progressData.progress)) {
+                        if (data.completed_topics) {
+                            topicsCompleted += data.completed_topics.length;
+                        }
+                        if (data.test_scores && data.test_scores.length > 0) {
+                            totalScore += data.test_scores.reduce((a, b) => a + b, 0);
+                            testCount += data.test_scores.length;
+                        }
+                    }
+                }
+
+                const averageScore = testCount > 0 ? Math.round(totalScore / testCount) : 0;
+
+                let streak = 0;
+                try {
+                    for (const [, data] of Object.entries(progressData.progress || {})) {
+                        if (data && data.streak) {
+                            streak = Math.max(streak, data.streak);
+                        }
+                    }
+                    if (streak === 0) {
+                        for (const [, data] of Object.entries(progressData.progress || {})) {
+                            if (data && data.last_activity) {
+                                streak = 1;
+                                break;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    streak = 0;
+                }
+
+                let userRank = '--';
+                if (leaderboardData.leaderboard && Array.isArray(leaderboardData.leaderboard)) {
+                    const userIndex = leaderboardData.leaderboard.findIndex(u => String(u.email || '').trim().toLowerCase() === email);
+                    if (userIndex >= 0) {
+                        userRank = userIndex + 1;
+                    }
+                }
+
+                document.getElementById('topicsCompleted').textContent = topicsCompleted;
+                document.getElementById('testsScore').textContent = averageScore + '%';
+                document.getElementById('streak').textContent = streak;
+                document.getElementById('rank').textContent = userRank === '--' ? '#--' : '#' + userRank;
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('topicsCompleted').textContent = '0';
+                document.getElementById('testsScore').textContent = '0%';
+                document.getElementById('streak').textContent = '0';
+                document.getElementById('rank').textContent = '#--';
+            }
+        }
+
+        initDashboard();
+    </script>
+</body>
+</html>

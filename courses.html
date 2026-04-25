@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses - Smart AI Learning</title>
+    <style>
+        :root{
+            --bg:#060d1c;
+            --panel:#0f1b36;
+            --panel-soft:#122246;
+            --line:rgba(255,255,255,0.12);
+            --text:#e9f2ff;
+            --muted:#9cb0d7;
+            --neon:#5df1ff;
+            --green:#56f3a7;
+            --pink:#ff6fd8;
+            --purple:#a56dff;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+            min-height:100vh;
+            color:var(--text);
+            padding:20px;
+            background:
+                radial-gradient(1000px 600px at 0% -20%, #1d3366 0%, transparent 60%),
+                radial-gradient(900px 520px at 100% 5%, #3e1f65 0%, transparent 62%),
+                linear-gradient(180deg, #050913 0%, #060d1c 100%);
+        }
+        .bg-grid{
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 28px 28px;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            opacity:.6;
+        }
+        nav{
+            max-width:1200px;
+            margin:0 auto 20px auto;
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:14px 18px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            backdrop-filter: blur(10px);
+            background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            position:relative;
+            z-index:1;
+        }
+        .nav-left{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+        .back-btn{
+            padding:8px 12px;
+            border:1px solid var(--line);
+            border-radius:10px;
+            background:rgba(255,255,255,0.05);
+            color:var(--text);
+            cursor:pointer;
+            font-weight:600;
+            transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+        .back-btn:hover{
+            transform:translateY(-1px);
+            background:rgba(255,255,255,0.08);
+            box-shadow:0 8px 18px rgba(0,0,0,0.2);
+        }
+        nav h1{
+            font-size:28px;
+            letter-spacing:0.3px;
+            color:var(--text);
+            text-shadow:0 0 14px rgba(93,241,255,0.35);
+        }
+        nav a{
+            color:var(--neon);
+            margin:0 10px;
+            text-decoration:none;
+            cursor:pointer;
+            font-weight:600;
+        }
+        .container{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+        .hero{
+            border:1px solid var(--line);
+            border-radius:20px;
+            padding:18px 20px;
+            margin-bottom:18px;
+            background:
+                radial-gradient(380px 160px at 8% 0%, rgba(93,241,255,0.2), transparent 70%),
+                radial-gradient(420px 170px at 100% 100%, rgba(165,109,255,0.22), transparent 70%),
+                linear-gradient(180deg, rgba(18,34,70,0.92), rgba(14,26,52,0.95));
+            box-shadow:0 16px 36px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
+        }
+        h2{
+            font-size:30px;
+            text-align:center;
+            margin-bottom:8px;
+            text-shadow:0 0 16px rgba(93,241,255,0.35);
+        }
+        .hero p{
+            color:var(--muted);
+            text-align:center;
+            font-size:14px;
+        }
+        .courses{
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+            gap:14px;
+        }
+        .course-card{
+            border:1px solid var(--line);
+            border-radius:16px;
+            overflow:hidden;
+            box-shadow:0 12px 24px rgba(0,0,0,0.25);
+            transition:transform 0.22s ease, box-shadow 0.22s ease;
+            cursor:pointer;
+            background:linear-gradient(180deg, rgba(17,31,61,0.9), rgba(11,20,40,0.95));
+        }
+        .course-card:hover{
+            transform:translateY(-4px);
+            box-shadow:0 18px 30px rgba(0,0,0,0.35);
+        }
+        .course-header{
+            padding:20px;
+            text-align:center;
+            color:#fff;
+            background:
+                radial-gradient(180px 90px at 15% 0%, rgba(93,241,255,0.22), transparent 70%),
+                linear-gradient(135deg, #2850bf 0%, #6f3fcc 100%);
+            border-bottom:1px solid rgba(255,255,255,0.1);
+        }
+        .course-header h3{font-size:38px;margin-bottom:8px;line-height:1}
+        .course-header .name{font-size:34px;font-weight:800;line-height:1.15}
+        .course-header p{font-size:14px;opacity:0.92}
+        .course-body{padding:16px}
+        .course-body p{color:var(--muted);margin-bottom:12px;line-height:1.5}
+        .course-stats{
+            display:flex;
+            justify-content:space-between;
+            font-size:13px;
+            color:#d2def9;
+            margin-bottom:12px;
+        }
+        .course-stats span{
+            background:rgba(255,255,255,0.06);
+            border:1px solid var(--line);
+            padding:6px 10px;
+            border-radius:999px;
+        }
+        .btn{
+            width:100%;
+            padding:12px;
+            background:linear-gradient(135deg, #3a7bff 0%, #8a4dff 100%);
+            color:#fff;
+            border:none;
+            border-radius:10px;
+            cursor:pointer;
+            font-weight:700;
+            font-size:16px;
+            letter-spacing:.3px;
+            transition:transform .18s ease, box-shadow .18s ease;
+            box-shadow:0 10px 20px rgba(58,123,255,0.3);
+        }
+        .btn:hover{transform:translateY(-2px);box-shadow:0 14px 26px rgba(58,123,255,0.42)}
+        .loading{
+            text-align:center;
+            color:var(--muted);
+            border:1px dashed var(--line);
+            border-radius:12px;
+            padding:16px;
+            grid-column:1 / -1;
+            background:rgba(255,255,255,0.03);
+        }
+        @media (max-width: 760px){
+            body{padding:12px}
+            nav{padding:12px;flex-direction:column;align-items:flex-start;gap:8px}
+            nav h1{font-size:24px}
+            h2{font-size:24px}
+            .course-header h3{font-size:32px}
+            .course-header .name{font-size:30px}
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <nav>
+        <div class="nav-left">
+            <button class="back-btn" onclick="goBack('dashboard.html')">← Back</button>
+            <h1>Smart AI Learning</h1>
+        </div>
+        <div>
+            <a onclick="window.location.href='dashboard.html'">Dashboard</a>
+            <a onclick="window.location.href='courses.html'">Courses</a>
+            <a onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h2>&#128218; Programming Languages &amp; Courses</h2>
+            <p>Select your next language quest and start learning with AI-guided missions.</p>
+        </div>
+
+        <div class="courses" id="coursesList">
+            <div class="loading">Loading courses...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const email = String(localStorage.getItem('email') || '').trim().toLowerCase();
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function goBack(fallback) {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = fallback;
+            }
+        }
+
+        function iconForLanguage(name) {
+            const v = String(name || '').toLowerCase();
+            if (v.includes('python')) return '&#128013;';
+            if (v.includes('java') && !v.includes('javascript')) return '&#9749;';
+            if (v.includes('javascript')) return '&#9889;';
+            if (v.includes('c++')) return '&#128187;';
+            if (v.includes('go')) return '&#127754;';
+            if (v.includes('rust')) return '&#128736;';
+            if (v.includes('sql')) return '&#128451;';
+            if (v.includes('typescript')) return '&#128208;';
+            return '&#128218;';
+        }
+
+        async function loadCourses() {
+            try {
+                const response = await fetch(`${API_URL}/languages`);
+                const data = await response.json();
+
+                const coursesList = document.getElementById('coursesList');
+                coursesList.innerHTML = '';
+
+                const languages = data.details || [];
+                if (languages.length === 0) {
+                    coursesList.innerHTML = '<div class="loading">No courses available from server.</div>';
+                    return;
+                }
+
+                languages.forEach((lang) => {
+                    const safeName = String(lang.name || '').trim();
+                    const card = document.createElement('div');
+                    card.className = 'course-card';
+                    card.onclick = () => startCourse(safeName);
+                    card.innerHTML = `
+                        <div class="course-header">
+                            <h3>${iconForLanguage(safeName)}</h3>
+                            <div class="name">${safeName}</div>
+                            <p>${lang.topics_count} Topics</p>
+                        </div>
+                        <div class="course-body">
+                            <p>Master ${safeName} with AI-guided lessons and intelligent testing.</p>
+                            <div class="course-stats">
+                                <span>&#128218; ${lang.topics_count} Topics</span>
+                                <span>&#9989; Pass ${lang.min_pass}%</span>
+                            </div>
+                            <button class="btn" data-lang="${safeName}">Start Learning</button>
+                        </div>
+                    `;
+                    const btn = card.querySelector('.btn');
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        startCourse(safeName);
+                    });
+                    coursesList.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                document.getElementById('coursesList').innerHTML =
+                    '<div class="loading">Error loading courses. API may be offline.</div>';
+            }
+        }
+
+        async function startCourse(language) {
+            const emailVal = String(localStorage.getItem('email') || '').trim().toLowerCase();
+            if (!language || String(language).includes('${')) {
+                alert('Invalid course name. Please refresh and try again.');
+                return;
+            }
+            try {
+                const query = `user_email=${encodeURIComponent(emailVal)}&language=${encodeURIComponent(language)}`;
+                const response = await fetch(`${API_URL}/language/select?${query}`, { method: 'POST' });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || 'Failed to start course');
+                }
+
+                localStorage.setItem('selectedCourse', language);
+                localStorage.setItem('courseStartTime', String(Date.now()));
+                window.location.href = 'learning.html';
+            } catch (error) {
+                alert('Error starting course: ' + error.message);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = 'index.html';
+        }
+
+        loadCourses();
+    </script>
+</body>
+</html>

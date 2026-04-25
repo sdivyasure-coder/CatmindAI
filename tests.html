@@ -1,0 +1,3276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Lab - Smart AI Learning</title>
+    <style>
+        :root{
+            --bg:#060d1c;
+            --panel:#0f1b36;
+            --line:rgba(255,255,255,0.12);
+            --text:#e9f2ff;
+            --muted:#9cb0d7;
+            --neon:#5df1ff;
+            --green:#56f3a7;
+            --red:#ff6b6b;
+            --purple:#a56dff;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+            min-height:100vh;
+            color:var(--text);
+            padding:20px;
+            background:
+                radial-gradient(1000px 600px at 0% -20%, #1d3366 0%, transparent 60%),
+                radial-gradient(900px 520px at 100% 5%, #3e1f65 0%, transparent 62%),
+                linear-gradient(180deg, #050913 0%, #060d1c 100%);
+        }
+        .bg-grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(circle at center, black 30%, transparent 80%);opacity:.6}
+        nav{max-width:1200px;margin:0 auto 20px auto;border:1px solid var(--line);border-radius:16px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));position:relative;z-index:1}
+        nav h1{font-size:28px;color:var(--text);text-shadow:0 0 14px rgba(93,241,255,.35)}
+        nav a{color:var(--neon);margin:0 10px;text-decoration:none;cursor:pointer;font-weight:600}
+        .container{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+        .user-badge{
+            max-width:1200px;
+            margin:0 auto 12px auto;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid var(--line);
+            background:rgba(255,255,255,.04);
+            color:var(--muted);
+            font-size:14px;
+            position:relative;
+            z-index:1;
+        }
+        .lab-container{
+            display:grid;
+            grid-template-columns: 280px 1fr;
+            gap:16px;
+        }
+        .course-panel{
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:16px;
+            background:linear-gradient(180deg, rgba(17,31,61,.92), rgba(11,20,40,.96));
+            box-shadow:0 16px 36px rgba(0,0,0,.35);
+        }
+        .course-panel h2{font-size:18px;margin-bottom:10px}
+        .course-list, .task-list{display:flex;flex-direction:column;gap:8px}
+        .course-btn, .task-btn{
+            padding:10px 12px;
+            border-radius:12px;
+            border:1px solid var(--line);
+            background:rgba(255,255,255,.03);
+            color:var(--text);
+            cursor:pointer;
+            font-weight:700;
+            text-align:left;
+        }
+        .course-btn.active, .task-btn.active{
+            border-color:#4ea7ff;
+            background:rgba(58,123,255,.3);
+            box-shadow:0 0 0 1px rgba(58,123,255,.4) inset;
+        }
+        .task-section-title{margin:14px 0 8px 0;color:var(--muted);font-size:12px;letter-spacing:.6px;text-transform:uppercase}
+
+        .debug-panel{
+            border:1px solid var(--line);
+            border-radius:16px;
+            padding:20px;
+            background:linear-gradient(180deg, rgba(17,31,61,.92), rgba(11,20,40,.96));
+            box-shadow:0 16px 36px rgba(0,0,0,.35);
+        }
+        .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+        .panel-head h2{font-size:26px;line-height:1.2;margin-bottom:6px}
+        .panel-head p{color:var(--muted);font-size:14px}
+        .chip{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--neon);font-size:12px;margin-bottom:8px}
+        .status-pill{padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;font-weight:700}
+        .status-pill.good{border-color:var(--green);color:var(--green)}
+        .status-pill.bad{border-color:var(--red);color:var(--red)}
+        .status-pill.neutral{border-color:var(--line);color:var(--muted)}
+
+        .editor-wrap{margin-top:12px}
+        .editor-wrap label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+        textarea{
+            width:100%;
+            min-height:260px;
+            resize:vertical;
+            border-radius:14px;
+            border:1px solid var(--line);
+            background:rgba(6,12,26,.8);
+            color:var(--text);
+            padding:14px;
+            font-family:"Courier New",monospace;
+            font-size:14px;
+            line-height:1.5;
+            outline:none;
+        }
+        textarea:focus{border-color:rgba(93,241,255,.5);box-shadow:0 0 0 2px rgba(93,241,255,.15)}
+
+        .actions{display:flex;gap:10px;margin-top:12px}
+        button{
+            flex:1;
+            padding:12px;
+            border:none;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:800;
+            font-size:16px;
+            letter-spacing:.2px;
+            background:linear-gradient(135deg,#3a7bff 0%, #8a4dff 100%);
+            color:#fff;
+            transition:transform .18s ease, box-shadow .18s ease;
+            box-shadow:0 10px 20px rgba(58,123,255,.3)
+        }
+        button:hover{transform:translateY(-2px);box-shadow:0 14px 26px rgba(58,123,255,.42)}
+        button.secondary{background:linear-gradient(135deg,#22304d 0%, #2a3b60 100%);box-shadow:0 10px 20px rgba(20,26,46,.35)}
+
+        .feedback{margin-top:16px;border:1px dashed var(--line);border-radius:12px;padding:14px;background:rgba(255,255,255,.03)}
+        .feedback h3{margin-bottom:8px;font-size:16px}
+        .feedback h4{margin:10px 0 6px 0;font-size:14px;color:var(--text)}
+        .feedback ul{padding-left:18px;color:var(--muted);line-height:1.6}
+        .feedback li.good{color:var(--green)}
+        .feedback li.bad{color:var(--red)}
+        .code-fix{
+            margin-top:10px;
+            padding:10px;
+            border-radius:10px;
+            border:1px solid var(--line);
+            background:rgba(6,12,26,.7);
+            font-family:"Courier New",monospace;
+            font-size:13px;
+            white-space:pre-wrap;
+            color:var(--text);
+        }
+        .hidden{display:none}
+
+        @media (max-width:960px){
+            body{padding:12px}
+            nav{padding:12px;flex-direction:column;align-items:flex-start;gap:8px}
+            nav h1{font-size:24px}
+            .lab-container{grid-template-columns:1fr}
+            .panel-head{flex-direction:column}
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <nav>
+        <h1>Smart AI Learning</h1>
+        <div>
+            <a onclick="window.location.href='courses.html'">Courses</a>
+            <a onclick="logout()">Logout</a>
+        </div>
+    </nav>
+    <div class="user-badge" id="activeUserBadge">Logged in as: --</div>
+
+    <div class="container">
+        <div class="lab-container">
+            <aside class="course-panel">
+                <h2>Debugging Courses</h2>
+                <div class="course-list" id="courseList"></div>
+                <div class="task-section-title">Challenges</div>
+                <div class="task-list" id="taskList"></div>
+            </aside>
+
+            <section class="debug-panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="chip" id="activeCourse">Course</div>
+                        <h2 id="taskTitle">Select a course</h2>
+                        <p id="taskDesc">Pick a course on the left to load a debugging challenge.</p>
+                    </div>
+                    <div class="status-pill neutral" id="statusPill">Not submitted</div>
+                </div>
+
+                <div class="editor-wrap">
+                    <label for="codeEditor">Buggy Code (fix it)</label>
+                    <textarea id="codeEditor" spellcheck="false"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="secondary" id="resetBtn" type="button">Reset Buggy Code</button>
+                    <button id="submitFixBtn" type="button">Submit Fix</button>
+                </div>
+
+                <div class="feedback">
+                    <h3>AI Feedback</h3>
+                    <h4>Summary</h4>
+                    <ul id="feedbackList">
+                        <li>Choose a course and challenge to start debugging.</li>
+                    </ul>
+                    <div id="mistakesBlock" class="hidden">
+                        <h4>Mistakes</h4>
+                        <ul id="mistakesList"></ul>
+                    </div>
+                    <div id="tipsBlock" class="hidden">
+                        <h4>Tips</h4>
+                        <ul id="tipsList"></ul>
+                    </div>
+                    <div id="fixBlock" class="hidden">
+                        <h4>Corrected Code</h4>
+                        <div class="code-fix" id="correctedCode"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const EVAL_ENDPOINT = `${API_URL}/debug/evaluate`;
+        const token = localStorage.getItem('token');
+        const activeEmail = String(localStorage.getItem('email') || '').trim().toLowerCase();
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+        document.getElementById('activeUserBadge').textContent = `Logged in as: ${activeEmail || 'unknown user'}`;
+
+        /*
+        const debugCourses = {
+            Python: {
+                tasks: [
+                    {
+                        title: 'Fix the adder function',
+                        description: 'The function should return the sum of two numbers.',
+                        buggy: 'def add(a, b)\n    return a - b',
+                        solution: 'def add(a, b):\n    return a + b',
+                        rules: {
+                            mustInclude: [
+                                { regex: /def\s+add\s*\(a,\s*b\)\s*:/, message: 'Add the missing colon after the function header.' },
+                                { regex: /return\s+a\s*\+\s*b/, message: 'Return the sum using `a + b`.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /return\s+a\s*-\s*b/, message: 'You are still subtracting. Use addition.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the loop total',
+                        description: 'Sum all numbers in the list and return the total.',
+                        buggy: 'def total(nums):\n    sum = 0\n    for n in nums:\n        sum = sum + 1\n    return sum',
+                        solution: 'def total(nums):\n    total_sum = 0\n    for n in nums:\n        total_sum = total_sum + n\n    return total_sum',
+                        rules: {
+                            mustInclude: [
+                                { regex: /for\s+n\s+in\s+nums/, message: 'Keep looping through each number in `nums`.' },
+                                { regex: /total_sum\s*=\s*total_sum\s*\+\s*n/, message: 'Add `n` to the running total.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /sum\s*=\s*sum\s*\+\s*1/, message: 'You are counting items, not summing values.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the empty list check',
+                        description: 'Return True when the list is empty.',
+                        buggy: 'def is_empty(items):\n    return len(items) > 0',
+                        solution: 'def is_empty(items):\n    return len(items) == 0',
+                        rules: {
+                            mustInclude: [
+                                { regex: /len\s*\(\s*items\s*\)\s*==\s*0/, message: 'Check for length equal to 0.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /len\s*\(\s*items\s*\)\s*>\s*0/, message: 'This returns True for non-empty lists.' }
+                            ]
+                        }
+                    }
+                ]
+            },
+            JavaScript: {
+                tasks: [
+                    {
+                        title: 'Fix the greeting',
+                        description: 'Return a greeting message with the user name.',
+                        buggy: 'function greet(name) {\n  return "Hello" + name;\n}\n',
+                        solution: 'function greet(name) {\n  return "Hello, " + name;\n}\n',
+                        rules: {
+                            mustInclude: [
+                                { regex: /return\s+"Hello,\s"\s*\+\s*name/, message: 'Include a comma and space after Hello.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /"Hello"\s*\+\s*name/, message: 'Add the missing comma and space in the greeting.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the even checker',
+                        description: 'Return true only when the number is even.',
+                        buggy: 'function isEven(n) {\n  return n % 2 = 0;\n}\n',
+                        solution: 'function isEven(n) {\n  return n % 2 === 0;\n}\n',
+                        rules: {
+                            mustInclude: [
+                                { regex: /%\s*2\s*===\s*0/, message: 'Use `===` to compare the remainder.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /%\s*2\s*=\s*0/, message: 'Use comparison, not assignment.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the array length',
+                        description: 'Return the last item in the array.',
+                        buggy: 'function lastItem(items) {\n  return items[items.length];\n}\n',
+                        solution: 'function lastItem(items) {\n  return items[items.length - 1];\n}\n',
+                        rules: {
+                            mustInclude: [
+                                { regex: /items\\.length\\s*-\\s*1/, message: 'Use `length - 1` for the last index.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /items\\s*\\[\\s*items\\.length\\s*\\]/, message: 'Array indexes are zero-based.' }
+                            ]
+                        }
+                    }
+                ]
+            },
+            Java: {
+                tasks: [
+                    {
+                        title: 'Fix the max method',
+                        description: 'Return the larger of two numbers.',
+                        buggy: 'public static int max(int a, int b) {\n    if (a > b) {\n        return b;\n    }\n    return a;\n}',
+                        solution: 'public static int max(int a, int b) {\n    if (a > b) {\n        return a;\n    }\n    return b;\n}',
+                        rules: {
+                            mustInclude: [
+                                { regex: /if\s*\(a\s*>\s*b\)/, message: 'Keep the comparison `a > b`.' },
+                                { regex: /return\s+a\s*;/, message: 'When `a` is larger, return `a`.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /return\s+b\s*;\s*\}/, message: 'Inside the if block, return `a`, not `b`.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the string length check',
+                        description: 'Return true only when the string has 5 or more characters.',
+                        buggy: 'public static boolean isLong(String text) {\n    return text.length() > 5;\n}',
+                        solution: 'public static boolean isLong(String text) {\n    return text.length() >= 5;\n}',
+                        rules: {
+                            mustInclude: [
+                                { regex: /length\(\)\s*>=\s*5/, message: 'Use `>= 5` to include length 5.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /length\(\)\s*>\s*5/, message: 'Length 5 should also return true.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the list size check',
+                        description: 'Return true when the list is empty.',
+                        buggy: 'public static boolean isEmpty(List<String> items) {\n    return items.size() > 0;\n}',
+                        solution: 'public static boolean isEmpty(List<String> items) {\n    return items.size() == 0;\n}',
+                        rules: {
+                            mustInclude: [
+                                { regex: /size\\(\\)\\s*==\\s*0/, message: 'Use `== 0` for empty size.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /size\\(\\)\\s*>\\s*0/, message: 'This returns true for non-empty lists.' }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "C++": {
+                tasks: [
+                    {
+                        title: 'Fix the square function',
+                        description: 'Return the square of the number.',
+                        buggy: 'int square(int n) {\n    return n ^ 2;\n}',
+                        solution: 'int square(int n) {\n    return n * n;\n}',
+                        rules: {
+                            mustInclude: [
+                                { regex: /return\\s+n\\s*\\*\\s*n/, message: 'Use multiplication to square the value.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /\\^\\s*2/, message: '`^` is XOR, not power.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the loop bounds',
+                        description: 'Sum all numbers in the vector safely.',
+                        buggy: 'int total(const vector<int>& nums) {\n    int sum = 0;\n    for (int i = 0; i <= nums.size(); i++) {\n        sum += nums[i];\n    }\n    return sum;\n}',
+                        solution: 'int total(const vector<int>& nums) {\n    int sum = 0;\n    for (int i = 0; i < nums.size(); i++) {\n        sum += nums[i];\n    }\n    return sum;\n}',
+                        rules: {
+                            mustInclude: [
+                                { regex: /i\\s*<\\s*nums\\.size\\(\\)/, message: 'Use `<` to avoid going out of bounds.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /i\\s*<=\\s*nums\\.size\\(\\)/, message: '`<=` reads past the end of the vector.' }
+                            ]
+                        }
+                    }
+                ]
+            },
+            SQL: {
+                tasks: [
+                    {
+                        title: 'Fix the active user count',
+                        description: 'Count users with status = \"active\".',
+                        buggy: "SELECT COUNT(*) FROM users WHERE status = active;",
+                        solution: "SELECT COUNT(*) FROM users WHERE status = 'active';",
+                        rules: {
+                            mustInclude: [
+                                { regex: /status\\s*=\\s*'active'/i, message: 'Wrap the string value in quotes.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /status\\s*=\\s*active/i, message: 'Unquoted strings are invalid in SQL.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the date filter',
+                        description: 'Select orders from 2025 and later.',
+                        buggy: "SELECT * FROM orders WHERE order_date > '2025-01-01';",
+                        solution: "SELECT * FROM orders WHERE order_date >= '2025-01-01';",
+                        rules: {
+                            mustInclude: [
+                                { regex: /order_date\\s*>=\\s*'2025-01-01'/i, message: 'Include the start date with >=.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /order_date\\s*>\\s*'2025-01-01'/i, message: 'Use >= to include the first day.' }
+                            ]
+                        }
+                    }
+                ]
+            },
+            TypeScript: {
+                tasks: [
+                    {
+                        title: 'Fix the uppercase helper',
+                        description: 'Return the uppercase string.',
+                        buggy: 'function toUpper(name: string): string {\n    return name.toUpperCase;\n}',
+                        solution: 'function toUpper(name: string): string {\n    return name.toUpperCase();\n}',
+                        rules: {
+                            mustInclude: [
+                                { regex: /toUpperCase\\(\\)/, message: 'Call the function with parentheses.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /toUpperCase\\s*;/, message: 'You forgot to call the method.' }
+                            ]
+                        }
+                    },
+                    {
+                        title: 'Fix the typed sum',
+                        description: 'Return a number and add both values.',
+                        buggy: 'function sum(a: number, b: number): number {\n    return a + \"b\";\n}',
+                        solution: 'function sum(a: number, b: number): number {\n    return a + b;\n}',
+                        rules: {
+                            mustInclude: [
+                                { regex: /return\\s+a\\s*\\+\\s*b/, message: 'Add the two numbers directly.' }
+                            ],
+                            mustNotInclude: [
+                                { regex: /\"b\"/, message: 'Remove the string literal.' }
+                            ]
+                        }
+                    }
+                ]
+            }
+        };
+
+        const MAX_TASKS_PER_COURSE = 20;
+
+        function cloneRules(rules) {
+            if (!rules) return undefined;
+            const cloneList = (list) => (Array.isArray(list) ? list.map((rule) => ({
+                regex: rule.regex instanceof RegExp ? new RegExp(rule.regex.source, rule.regex.flags) : rule.regex,
+                message: rule.message
+            })) : []);
+            return {
+                mustInclude: cloneList(rules.mustInclude),
+                mustNotInclude: cloneList(rules.mustNotInclude)
+            };
+        }
+
+        function cloneTask(task) {
+            return {
+                title: task.title,
+                description: task.description,
+                buggy: task.buggy,
+                solution: task.solution,
+                rules: cloneRules(task.rules)
+            };
+        }
+
+        function expandCourseTasks(course) {
+            const base = Array.isArray(course.tasks) ? course.tasks : [];
+            if (!base.length) return base;
+            const expanded = base.map(cloneTask);
+            let counter = 1;
+            while (expanded.length < MAX_TASKS_PER_COURSE) {
+                const seed = base[expanded.length % base.length];
+                const clone = cloneTask(seed);
+                clone.title = `${seed.title} (Practice ${counter})`;
+                expanded.push(clone);
+                counter += 1;
+            }
+            return expanded.slice(0, MAX_TASKS_PER_COURSE);
+        }
+
+        Object.keys(debugCourses).forEach((course) => {
+            debugCourses[course].tasks = expandCourseTasks(debugCourses[course]);
+        });
+
+        */
+        function escapeRegExp(value) {
+            return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function pyAddTask(v) {
+            const fn = v.fn, a = v.a, b = v.b;
+            return {
+                title: v.title,
+                description: 'The function should return the sum of two numbers.',
+                buggy: `def ${fn}(${a}, ${b})\n    return ${a} - ${b}`,
+                solution: `def ${fn}(${a}, ${b}):\n    return ${a} + ${b}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`def\\s+${escapeRegExp(fn)}\\s*\\(${escapeRegExp(a)},\\s*${escapeRegExp(b)}\\)\\s*:`), message: 'Add the missing colon after the function header.' },
+                        { regex: new RegExp(`return\\s+${escapeRegExp(a)}\\s*\\+\\s*${escapeRegExp(b)}`), message: 'Return the sum using addition.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`return\\s+${escapeRegExp(a)}\\s*-\\s*${escapeRegExp(b)}`), message: 'You are still subtracting. Use addition.' }
+                    ]
+                }
+            };
+        }
+
+        function pyTotalTask(v) {
+            const fn = v.fn, list = v.list, acc = v.acc, item = v.item;
+            return {
+                title: v.title,
+                description: 'Sum all numbers in the list and return the total.',
+                buggy: `def ${fn}(${list}):\n    ${acc} = 0\n    for ${item} in ${list}:\n        ${acc} = ${acc} + 1\n    return ${acc}`,
+                solution: `def ${fn}(${list}):\n    ${acc} = 0\n    for ${item} in ${list}:\n        ${acc} = ${acc} + ${item}\n    return ${acc}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`for\\s+${escapeRegExp(item)}\\s+in\\s+${escapeRegExp(list)}`), message: 'Keep looping through each number in the list.' },
+                        { regex: new RegExp(`${escapeRegExp(acc)}\\s*=\\s*${escapeRegExp(acc)}\\s*\\+\\s*${escapeRegExp(item)}`), message: 'Add the current item to the running total.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`${escapeRegExp(acc)}\\s*=\\s*${escapeRegExp(acc)}\\s*\\+\\s*1`), message: 'You are counting items, not summing values.' }
+                    ]
+                }
+            };
+        }
+
+        function pyEmptyTask(v) {
+            const fn = v.fn, list = v.list;
+            return {
+                title: v.title,
+                description: 'Return True when the list is empty.',
+                buggy: `def ${fn}(${list}):\n    return len(${list}) > 0`,
+                solution: `def ${fn}(${list}):\n    return len(${list}) == 0`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`len\\s*\\(\\s*${escapeRegExp(list)}\\s*\\)\\s*==\\s*0`), message: 'Check for length equal to 0.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`len\\s*\\(\\s*${escapeRegExp(list)}\\s*\\)\\s*>\\s*0`), message: 'This returns True for non-empty lists.' }
+                    ]
+                }
+            };
+        }
+
+        function pyLengthTask(v) {
+            const fn = v.fn, name = v.name, min = v.min;
+            return {
+                title: v.title,
+                description: `Return True when the string has ${min} or more characters.`,
+                buggy: `def ${fn}(${name}):\n    return len(${name}) > ${min}`,
+                solution: `def ${fn}(${name}):\n    return len(${name}) >= ${min}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`len\\s*\\(\\s*${escapeRegExp(name)}\\s*\\)\\s*>=\\s*${min}`), message: `Use >= ${min} to include length ${min}.` }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`len\\s*\\(\\s*${escapeRegExp(name)}\\s*\\)\\s*>\\s*${min}`), message: `Length ${min} should also return true.` }
+                    ]
+                }
+            };
+        }
+
+        function jsGreetTask(v) {
+            const fn = v.fn, name = v.name, word = v.word;
+            return {
+                title: v.title,
+                description: 'Return a greeting message with the user name.',
+                buggy: `function ${fn}(${name}) {\n  return \"${word}\" + ${name};\n}\n`,
+                solution: `function ${fn}(${name}) {\n  return \"${word}, \" + ${name};\n}\n`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`return\\s+\\\"${escapeRegExp(word)},\\s+\\\"\\s*\\+\\s*${escapeRegExp(name)}`), message: 'Include a comma and space after the greeting.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`\\\"${escapeRegExp(word)}\\\"\\s*\\+\\s*${escapeRegExp(name)}`), message: 'Add the missing comma and space in the greeting.' }
+                    ]
+                }
+            };
+        }
+
+        function jsEvenTask(v) {
+            const fn = v.fn, name = v.name;
+            return {
+                title: v.title,
+                description: 'Return true only when the number is even.',
+                buggy: `function ${fn}(${name}) {\n  return ${name} % 2 = 0;\n}\n`,
+                solution: `function ${fn}(${name}) {\n  return ${name} % 2 === 0;\n}\n`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`${escapeRegExp(name)}\\s*%\\s*2\\s*===\\s*0`), message: 'Use `===` to compare the remainder.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`${escapeRegExp(name)}\\s*%\\s*2\\s*=\\s*0`), message: 'Use comparison, not assignment.' }
+                    ]
+                }
+            };
+        }
+
+        function jsLastTask(v) {
+            const fn = v.fn, arr = v.arr;
+            return {
+                title: v.title,
+                description: 'Return the last item in the array.',
+                buggy: `function ${fn}(${arr}) {\n  return ${arr}[${arr}.length];\n}\n`,
+                solution: `function ${fn}(${arr}) {\n  return ${arr}[${arr}.length - 1];\n}\n`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`${escapeRegExp(arr)}\\.length\\s*-\\s*1`), message: 'Use `length - 1` for the last index.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`${escapeRegExp(arr)}\\s*\\[\\s*${escapeRegExp(arr)}\\.length\\s*\\]`), message: 'Array indexes are zero-based.' }
+                    ]
+                }
+            };
+        }
+
+        function jsLoopTask(v) {
+            const fn = v.fn, arr = v.arr;
+            return {
+                title: v.title,
+                description: 'Sum all numbers in the array.',
+                buggy: `function ${fn}(${arr}) {\n  let total = 0;\n  for (let i = 0; i <= ${arr}.length; i++) {\n    total += ${arr}[i];\n  }\n  return total;\n}\n`,
+                solution: `function ${fn}(${arr}) {\n  let total = 0;\n  for (let i = 0; i < ${arr}.length; i++) {\n    total += ${arr}[i];\n  }\n  return total;\n}\n`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`i\\s*<\\s*${escapeRegExp(arr)}\\.length`), message: 'Use `<` to avoid reading past the end.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`i\\s*<=\\s*${escapeRegExp(arr)}\\.length`), message: '`<=` reads past the end of the array.' }
+                    ]
+                }
+            };
+        }
+
+        function javaMaxTask(v) {
+            const fn = v.fn, a = v.a, b = v.b;
+            return {
+                title: v.title,
+                description: 'Return the larger of two numbers.',
+                buggy: `public static int ${fn}(int ${a}, int ${b}) {\n    if (${a} > ${b}) {\n        return ${b};\n    }\n    return ${a};\n}`,
+                solution: `public static int ${fn}(int ${a}, int ${b}) {\n    if (${a} > ${b}) {\n        return ${a};\n    }\n    return ${b};\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`if\\s*\\(${escapeRegExp(a)}\\s*>\\s*${escapeRegExp(b)}\\)`), message: 'Keep the comparison.' },
+                        { regex: new RegExp(`return\\s+${escapeRegExp(a)}\\s*;`), message: `When ${a} is larger, return ${a}.` }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`return\\s+${escapeRegExp(b)}\\s*;\\s*\\}`), message: `Inside the if block, return ${a}, not ${b}.` }
+                    ]
+                }
+            };
+        }
+
+        function javaLengthTask(v) {
+            const fn = v.fn, name = v.name, min = v.min;
+            return {
+                title: v.title,
+                description: `Return true only when the string has ${min} or more characters.`,
+                buggy: `public static boolean ${fn}(String ${name}) {\n    return ${name}.length() > ${min};\n}`,
+                solution: `public static boolean ${fn}(String ${name}) {\n    return ${name}.length() >= ${min};\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`length\\(\\)\\s*>=\\s*${min}`), message: `Use >= ${min} to include length ${min}.` }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`length\\(\\)\\s*>\\s*${min}`), message: `Length ${min} should also return true.` }
+                    ]
+                }
+            };
+        }
+
+        function javaEmptyTask(v) {
+            const fn = v.fn, list = v.list;
+            return {
+                title: v.title,
+                description: 'Return true when the list is empty.',
+                buggy: `public static boolean ${fn}(List<String> ${list}) {\n    return ${list}.size() > 0;\n}`,
+                solution: `public static boolean ${fn}(List<String> ${list}) {\n    return ${list}.size() == 0;\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`size\\(\\)\\s*==\\s*0`), message: 'Use `== 0` for empty size.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`size\\(\\)\\s*>\\s*0`), message: 'This returns true for non-empty lists.' }
+                    ]
+                }
+            };
+        }
+
+        function javaSumTask(v) {
+            const fn = v.fn, arr = v.arr;
+            return {
+                title: v.title,
+                description: 'Sum all numbers in the array.',
+                buggy: `public static int ${fn}(int[] ${arr}) {\n    int total = 0;\n    for (int i = 0; i < ${arr}.length; i++) {\n        total += 1;\n    }\n    return total;\n}`,
+                solution: `public static int ${fn}(int[] ${arr}) {\n    int total = 0;\n    for (int i = 0; i < ${arr}.length; i++) {\n        total += ${arr}[i];\n    }\n    return total;\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`total\\s*\\+=\\s*${escapeRegExp(arr)}\\[i\\]`), message: 'Add the current array item.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /total\\s*\\+=\\s*1/, message: 'You are counting items, not summing values.' }
+                    ]
+                }
+            };
+        }
+
+        function cppSquareTask(v) {
+            const fn = v.fn, name = v.name;
+            return {
+                title: v.title,
+                description: 'Return the square of the number.',
+                buggy: `int ${fn}(int ${name}) {\n    return ${name} ^ 2;\n}`,
+                solution: `int ${fn}(int ${name}) {\n    return ${name} * ${name};\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`return\\s+${escapeRegExp(name)}\\s*\\*\\s*${escapeRegExp(name)}`), message: 'Use multiplication to square the value.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\\^\\s*2/, message: '`^` is XOR, not power.' }
+                    ]
+                }
+            };
+        }
+
+        function cppLoopTask(v) {
+            const fn = v.fn, arr = v.arr;
+            return {
+                title: v.title,
+                description: 'Sum all numbers in the vector safely.',
+                buggy: `int ${fn}(const vector<int>& ${arr}) {\n    int sum = 0;\n    for (int i = 0; i <= ${arr}.size(); i++) {\n        sum += ${arr}[i];\n    }\n    return sum;\n}`,
+                solution: `int ${fn}(const vector<int>& ${arr}) {\n    int sum = 0;\n    for (int i = 0; i < ${arr}.size(); i++) {\n        sum += ${arr}[i];\n    }\n    return sum;\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`i\\s*<\\s*${escapeRegExp(arr)}\\.size\\(\\)`), message: 'Use `<` to avoid going out of bounds.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`i\\s*<=\\s*${escapeRegExp(arr)}\\.size\\(\\)`), message: '`<=` reads past the end of the vector.' }
+                    ]
+                }
+            };
+        }
+
+        function cppEvenTask(v) {
+            const fn = v.fn, name = v.name;
+            return {
+                title: v.title,
+                description: 'Return true only when the number is even.',
+                buggy: `bool ${fn}(int ${name}) {\n    return ${name} % 2 = 0;\n}`,
+                solution: `bool ${fn}(int ${name}) {\n    return ${name} % 2 == 0;\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`${escapeRegExp(name)}\\s*%\\s*2\\s*==\\s*0`), message: 'Use `==` to compare the remainder.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`${escapeRegExp(name)}\\s*%\\s*2\\s*=\\s*0`), message: 'Use comparison, not assignment.' }
+                    ]
+                }
+            };
+        }
+
+        function cppLengthTask(v) {
+            const fn = v.fn, name = v.name, min = v.min;
+            return {
+                title: v.title,
+                description: `Return true only when the string has ${min} or more characters.`,
+                buggy: `bool ${fn}(const string& ${name}) {\n    return ${name}.size() > ${min};\n}`,
+                solution: `bool ${fn}(const string& ${name}) {\n    return ${name}.size() >= ${min};\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`size\\(\\)\\s*>=\\s*${min}`), message: `Use >= ${min} to include length ${min}.` }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`size\\(\\)\\s*>\\s*${min}`), message: `Length ${min} should also return true.` }
+                    ]
+                }
+            };
+        }
+
+        function sqlQuoteTask(v) {
+            return {
+                title: v.title,
+                description: 'Fix the string value comparison.',
+                buggy: `SELECT ${v.select} FROM ${v.table} WHERE ${v.column} = ${v.value};`,
+                solution: `SELECT ${v.select} FROM ${v.table} WHERE ${v.column} = '${v.value}';`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`${escapeRegExp(v.column)}\\s*=\\s*'${escapeRegExp(v.value)}'`, 'i'), message: 'Wrap the string value in quotes.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`${escapeRegExp(v.column)}\\s*=\\s*${escapeRegExp(v.value)}`, 'i'), message: 'Unquoted strings are invalid in SQL.' }
+                    ]
+                }
+            };
+        }
+
+        function sqlDateTask(v) {
+            return {
+                title: v.title,
+                description: 'Select rows from the start date and later.',
+                buggy: `SELECT * FROM ${v.table} WHERE ${v.column} > '${v.date}';`,
+                solution: `SELECT * FROM ${v.table} WHERE ${v.column} >= '${v.date}';`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`${escapeRegExp(v.column)}\\s*>=\\s*'${escapeRegExp(v.date)}'`, 'i'), message: 'Include the start date with >=.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`${escapeRegExp(v.column)}\\s*>\\s*'${escapeRegExp(v.date)}'`, 'i'), message: 'Use >= to include the first day.' }
+                    ]
+                }
+            };
+        }
+
+        function sqlJoinTask(v) {
+            return {
+                title: v.title,
+                description: 'Fix the JOIN by adding the missing ON keyword.',
+                buggy: `SELECT ${v.select} FROM ${v.left} l JOIN ${v.right} r l.${v.leftKey} = r.${v.rightKey};`,
+                solution: `SELECT ${v.select} FROM ${v.left} l JOIN ${v.right} r ON l.${v.leftKey} = r.${v.rightKey};`,
+                rules: {
+                    mustInclude: [
+                        { regex: /\\bON\\b/i, message: 'Add the missing ON keyword.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /JOIN\\s+\\w+\\s+\\w+\\s+\\w+\\./i, message: 'JOIN requires ON before the condition.' }
+                    ]
+                }
+            };
+        }
+
+        function sqlLimitTask(v) {
+            return {
+                title: v.title,
+                description: 'Fix the LIMIT syntax.',
+                buggy: `SELECT * FROM ${v.table} LIMIT = ${v.limit};`,
+                solution: `SELECT * FROM ${v.table} LIMIT ${v.limit};`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`LIMIT\\s+${v.limit}`, 'i'), message: 'Use LIMIT followed by the number.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /LIMIT\\s*=\\s*\\d+/i, message: 'Remove the = sign from LIMIT.' }
+                    ]
+                }
+            };
+        }
+
+        function tsUpperTask(v) {
+            const fn = v.fn, name = v.name;
+            return {
+                title: v.title,
+                description: 'Return the uppercase string.',
+                buggy: `function ${fn}(${name}: string): string {\n    return ${name}.toUpperCase;\n}`,
+                solution: `function ${fn}(${name}: string): string {\n    return ${name}.toUpperCase();\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: /toUpperCase\\(\\)/, message: 'Call the function with parentheses.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /toUpperCase\\s*;/, message: 'You forgot to call the method.' }
+                    ]
+                }
+            };
+        }
+
+        function tsSumTask(v) {
+            const fn = v.fn, a = v.a, b = v.b;
+            return {
+                title: v.title,
+                description: 'Return a number and add both values.',
+                buggy: `function ${fn}(${a}: number, ${b}: number): number {\n    return ${a} + \"${b}\";\n}`,
+                solution: `function ${fn}(${a}: number, ${b}: number): number {\n    return ${a} + ${b};\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`return\\s+${escapeRegExp(a)}\\s*\\+\\s*${escapeRegExp(b)}`), message: 'Add the two numbers directly.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`\\\"${escapeRegExp(b)}\\\"`), message: 'Remove the string literal.' }
+                    ]
+                }
+            };
+        }
+
+        function tsLengthTask(v) {
+            const fn = v.fn, name = v.name, min = v.min;
+            return {
+                title: v.title,
+                description: `Return true only when the string has ${min} or more characters.`,
+                buggy: `function ${fn}(${name}: string): boolean {\n    return ${name}.length > ${min};\n}`,
+                solution: `function ${fn}(${name}: string): boolean {\n    return ${name}.length >= ${min};\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: new RegExp(`length\\s*>=\\s*${min}`), message: `Use >= ${min} to include length ${min}.` }
+                    ],
+                    mustNotInclude: [
+                        { regex: new RegExp(`length\\s*>\\s*${min}`), message: `Length ${min} should also return true.` }
+                    ]
+                }
+            };
+        }
+
+        function tsParseTask(v) {
+            const fn = v.fn, name = v.name;
+            return {
+                title: v.title,
+                description: 'Convert the string to an integer using base 10.',
+                buggy: `function ${fn}(${name}: string): number {\n    return parseInt(${name});\n}`,
+                solution: `function ${fn}(${name}: string): number {\n    return parseInt(${name}, 10);\n}`,
+                rules: {
+                    mustInclude: [
+                        { regex: /parseInt\\(\\s*\\w+\\s*,\\s*10\\s*\\)/, message: 'Pass radix 10 to parseInt.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /parseInt\\(\\s*\\w+\\s*\\)/, message: 'Add the radix argument.' }
+                    ]
+                }
+            };
+        }
+
+        const pythonTasks = [
+            ...[
+                { fn: 'add', a: 'a', b: 'b', title: 'Fix the adder function' },
+                { fn: 'sum_two', a: 'x', b: 'y', title: 'Fix sum_two' },
+                { fn: 'combine', a: 'left', b: 'right', title: 'Fix combine' },
+                { fn: 'total', a: 'num1', b: 'num2', title: 'Fix total' },
+                { fn: 'add_values', a: 'value1', b: 'value2', title: 'Fix add_values' }
+            ].map(pyAddTask),
+            ...[
+                { fn: 'total_sum', list: 'nums', acc: 'total', item: 'n', title: 'Fix the loop total' },
+                { fn: 'sum_list', list: 'values', acc: 'total_sum', item: 'value', title: 'Fix sum_list total' },
+                { fn: 'add_all', list: 'items', acc: 'result', item: 'item', title: 'Fix add_all total' },
+                { fn: 'compute_total', list: 'numbers', acc: 'total_sum', item: 'number', title: 'Fix compute_total' },
+                { fn: 'sum_numbers', list: 'nums', acc: 'sum_total', item: 'num', title: 'Fix sum_numbers' }
+            ].map(pyTotalTask),
+            ...[
+                { fn: 'is_empty', list: 'items', title: 'Fix empty list check' },
+                { fn: 'empty_list', list: 'values', title: 'Fix empty_list' },
+                { fn: 'no_items', list: 'data', title: 'Fix no_items' },
+                { fn: 'is_blank', list: 'records', title: 'Fix is_blank' },
+                { fn: 'list_empty', list: 'entries', title: 'Fix list_empty' }
+            ].map(pyEmptyTask),
+            ...[
+                { fn: 'long_enough', name: 'text', min: 5, title: 'Fix long_enough length check' },
+                { fn: 'has_min_length', name: 'word', min: 8, title: 'Fix has_min_length' },
+                { fn: 'is_long', name: 'title', min: 10, title: 'Fix is_long' },
+                { fn: 'min_length', name: 'name', min: 3, title: 'Fix min_length' },
+                { fn: 'is_valid', name: 'input_str', min: 6, title: 'Fix is_valid length check' }
+            ].map(pyLengthTask)
+        ];
+
+        const jsTasks = [
+            ...[
+                { fn: 'greet', name: 'name', word: 'Hello', title: 'Fix the greeting' },
+                { fn: 'welcomeUser', name: 'user', word: 'Welcome', title: 'Fix welcomeUser' },
+                { fn: 'sayHi', name: 'person', word: 'Hi', title: 'Fix sayHi' },
+                { fn: 'greetPerson', name: 'client', word: 'Hey', title: 'Fix greetPerson' },
+                { fn: 'helloUser', name: 'visitor', word: 'Greetings', title: 'Fix helloUser' }
+            ].map(jsGreetTask),
+            ...[
+                { fn: 'isEven', name: 'n', title: 'Fix the even checker' },
+                { fn: 'isDivByTwo', name: 'num', title: 'Fix isDivByTwo' },
+                { fn: 'checkEven', name: 'value', title: 'Fix checkEven' },
+                { fn: 'evenNumber', name: 'x', title: 'Fix evenNumber' },
+                { fn: 'isEvenValue', name: 'count', title: 'Fix isEvenValue' }
+            ].map(jsEvenTask),
+            ...[
+                { fn: 'lastItem', arr: 'items', title: 'Fix the array length' },
+                { fn: 'getLast', arr: 'list', title: 'Fix getLast' },
+                { fn: 'tail', arr: 'values', title: 'Fix tail' },
+                { fn: 'lastElement', arr: 'arr', title: 'Fix lastElement' },
+                { fn: 'lastOne', arr: 'numbers', title: 'Fix lastOne' }
+            ].map(jsLastTask),
+            ...[
+                { fn: 'sumAll', arr: 'nums', title: 'Fix sumAll loop' },
+                { fn: 'sumArray', arr: 'values', title: 'Fix sumArray' },
+                { fn: 'totalAll', arr: 'items', title: 'Fix totalAll' },
+                { fn: 'addItems', arr: 'list', title: 'Fix addItems' },
+                { fn: 'sumValues', arr: 'numbers', title: 'Fix sumValues' }
+            ].map(jsLoopTask)
+        ];
+
+        const javaTasks = [
+            ...[
+                { fn: 'max', a: 'a', b: 'b', title: 'Fix the max method' },
+                { fn: 'maxOf', a: 'x', b: 'y', title: 'Fix maxOf' },
+                { fn: 'bigger', a: 'left', b: 'right', title: 'Fix bigger' },
+                { fn: 'larger', a: 'first', b: 'second', title: 'Fix larger' },
+                { fn: 'maxValue', a: 'n1', b: 'n2', title: 'Fix maxValue' }
+            ].map(javaMaxTask),
+            ...[
+                { fn: 'isLong', name: 'text', min: 5, title: 'Fix the string length check' },
+                { fn: 'hasMinLength', name: 'word', min: 8, title: 'Fix hasMinLength' },
+                { fn: 'isAtLeast', name: 'name', min: 3, title: 'Fix isAtLeast' },
+                { fn: 'isLengthOk', name: 'title', min: 10, title: 'Fix isLengthOk' },
+                { fn: 'longEnough', name: 'input', min: 6, title: 'Fix longEnough' }
+            ].map(javaLengthTask),
+            ...[
+                { fn: 'isEmpty', list: 'items', title: 'Fix the list size check' },
+                { fn: 'listEmpty', list: 'values', title: 'Fix listEmpty' },
+                { fn: 'noItems', list: 'data', title: 'Fix noItems' },
+                { fn: 'isBlankList', list: 'list', title: 'Fix isBlankList' },
+                { fn: 'emptyList', list: 'records', title: 'Fix emptyList' }
+            ].map(javaEmptyTask),
+            ...[
+                { fn: 'sumAll', arr: 'nums', title: 'Fix array sum' },
+                { fn: 'total', arr: 'values', title: 'Fix total' },
+                { fn: 'addUp', arr: 'items', title: 'Fix addUp' },
+                { fn: 'sumArray', arr: 'numbers', title: 'Fix sumArray' },
+                { fn: 'totalValues', arr: 'scores', title: 'Fix totalValues' }
+            ].map(javaSumTask)
+        ];
+
+        const cppTasks = [
+            ...[
+                { fn: 'square', name: 'n', title: 'Fix the square function' },
+                { fn: 'sqr', name: 'x', title: 'Fix sqr' },
+                { fn: 'squareNumber', name: 'value', title: 'Fix squareNumber' },
+                { fn: 'pow2', name: 'num', title: 'Fix pow2' },
+                { fn: 'square_val', name: 'v', title: 'Fix square_val' }
+            ].map(cppSquareTask),
+            ...[
+                { fn: 'total', arr: 'nums', title: 'Fix the loop bounds' },
+                { fn: 'sumAll', arr: 'values', title: 'Fix sumAll loop' },
+                { fn: 'addAll', arr: 'list', title: 'Fix addAll' },
+                { fn: 'sumVector', arr: 'data', title: 'Fix sumVector' },
+                { fn: 'sumValues', arr: 'items', title: 'Fix sumValues' }
+            ].map(cppLoopTask),
+            ...[
+                { fn: 'isEven', name: 'n', title: 'Fix the even check' },
+                { fn: 'evenNumber', name: 'num', title: 'Fix evenNumber' },
+                { fn: 'checkEven', name: 'value', title: 'Fix checkEven' },
+                { fn: 'isDiv2', name: 'x', title: 'Fix isDiv2' },
+                { fn: 'isEvenValue', name: 'count', title: 'Fix isEvenValue' }
+            ].map(cppEvenTask),
+            ...[
+                { fn: 'isLong', name: 'text', min: 5, title: 'Fix the string length' },
+                { fn: 'hasMinLen', name: 'word', min: 8, title: 'Fix hasMinLen' },
+                { fn: 'isLengthOk', name: 'name', min: 3, title: 'Fix isLengthOk' },
+                { fn: 'longEnough', name: 'title', min: 10, title: 'Fix longEnough' },
+                { fn: 'minLength', name: 'input', min: 6, title: 'Fix minLength' }
+            ].map(cppLengthTask)
+        ];
+
+        const sqlTasks = [
+            ...[
+                { select: 'COUNT(*)', table: 'users', column: 'status', value: 'active', title: 'Fix active user count' },
+                { select: '*', table: 'orders', column: 'state', value: 'shipped', title: 'Fix shipped orders filter' },
+                { select: '*', table: 'tickets', column: 'priority', value: 'high', title: 'Fix priority filter' },
+                { select: '*', table: 'products', column: 'category', value: 'books', title: 'Fix category filter' },
+                { select: 'COUNT(*)', table: 'accounts', column: 'tier', value: 'pro', title: 'Fix tier count' }
+            ].map(sqlQuoteTask),
+            ...[
+                { table: 'orders', column: 'order_date', date: '2025-01-01', title: 'Fix the date filter' },
+                { table: 'events', column: 'start_date', date: '2024-06-01', title: 'Fix event filter' },
+                { table: 'invoices', column: 'issued_at', date: '2023-12-31', title: 'Fix invoice filter' },
+                { table: 'shipments', column: 'ship_date', date: '2025-03-01', title: 'Fix ship date filter' },
+                { table: 'licenses', column: 'valid_from', date: '2024-01-01', title: 'Fix license filter' }
+            ].map(sqlDateTask),
+            ...[
+                { select: 'l.id, r.name', left: 'orders', right: 'customers', leftKey: 'customer_id', rightKey: 'id', title: 'Fix orders join' },
+                { select: 'l.id, r.title', left: 'enrollments', right: 'courses', leftKey: 'course_id', rightKey: 'id', title: 'Fix courses join' },
+                { select: 'l.id, r.name', left: 'payments', right: 'users', leftKey: 'user_id', rightKey: 'id', title: 'Fix payments join' },
+                { select: 'l.id, r.email', left: 'sessions', right: 'users', leftKey: 'user_id', rightKey: 'id', title: 'Fix sessions join' },
+                { select: 'l.id, r.title', left: 'reviews', right: 'products', leftKey: 'product_id', rightKey: 'id', title: 'Fix reviews join' }
+            ].map(sqlJoinTask),
+            ...[
+                { table: 'users', limit: 10, title: 'Fix LIMIT for users' },
+                { table: 'orders', limit: 25, title: 'Fix LIMIT for orders' },
+                { table: 'tickets', limit: 15, title: 'Fix LIMIT for tickets' },
+                { table: 'products', limit: 8, title: 'Fix LIMIT for products' },
+                { table: 'events', limit: 12, title: 'Fix LIMIT for events' }
+            ].map(sqlLimitTask)
+        ];
+
+        const tsTasks = [
+            ...[
+                { fn: 'toUpper', name: 'name', title: 'Fix the uppercase helper' },
+                { fn: 'makeUpper', name: 'text', title: 'Fix makeUpper' },
+                { fn: 'upperCase', name: 'word', title: 'Fix upperCase' },
+                { fn: 'toUpperText', name: 'value', title: 'Fix toUpperText' },
+                { fn: 'upperName', name: 'label', title: 'Fix upperName' }
+            ].map(tsUpperTask),
+            ...[
+                { fn: 'sum', a: 'a', b: 'b', title: 'Fix the typed sum' },
+                { fn: 'addNumbers', a: 'x', b: 'y', title: 'Fix addNumbers' },
+                { fn: 'total', a: 'left', b: 'right', title: 'Fix total' },
+                { fn: 'sumValues', a: 'num1', b: 'num2', title: 'Fix sumValues' },
+                { fn: 'addTwo', a: 'first', b: 'second', title: 'Fix addTwo' }
+            ].map(tsSumTask),
+            ...[
+                { fn: 'isLong', name: 'text', min: 5, title: 'Fix length check' },
+                { fn: 'hasMinLength', name: 'word', min: 8, title: 'Fix hasMinLength' },
+                { fn: 'isAtLeast', name: 'name', min: 3, title: 'Fix isAtLeast' },
+                { fn: 'isLengthOk', name: 'title', min: 10, title: 'Fix isLengthOk' },
+                { fn: 'longEnough', name: 'input', min: 6, title: 'Fix longEnough' }
+            ].map(tsLengthTask),
+            ...[
+                { fn: 'toInt', name: 'value', title: 'Fix toInt' },
+                { fn: 'parseNumber', name: 'text', title: 'Fix parseNumber' },
+                { fn: 'readInt', name: 'input', title: 'Fix readInt' },
+                { fn: 'parseId', name: 'id', title: 'Fix parseId' },
+                { fn: 'stringToInt', name: 'raw', title: 'Fix stringToInt' }
+            ].map(tsParseTask)
+        ];
+
+        const debugCourses = {
+            Python: { tasks: pythonTasks },
+            JavaScript: { tasks: jsTasks },
+            Java: { tasks: javaTasks },
+            "C++": { tasks: cppTasks },
+            SQL: { tasks: sqlTasks },
+            TypeScript: { tasks: tsTasks }
+        };
+
+        const uniquePythonTasks = [
+            {
+                title: 'Fix add()',
+                description: 'Return the sum of two numbers.',
+                buggy: 'def add(a, b)\n    return a - b',
+                solution: 'def add(a, b):\n    return a + b',
+                rules: {
+                    mustInclude: [
+                        { regex: /def\s+add\s*\(a,\s*b\)\s*:/, message: 'Add the missing colon after the function header.' },
+                        { regex: /return\s+a\s*\+\s*b/, message: 'Return the sum using addition.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+a\s*-\s*b/, message: 'You are still subtracting. Use addition.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix is_even()',
+                description: 'Return True only when the number is even.',
+                buggy: 'def is_even(n):\n    return n % 2 = 0',
+                solution: 'def is_even(n):\n    return n % 2 == 0',
+                rules: {
+                    mustInclude: [
+                        { regex: /%\s*2\s*==\s*0/, message: 'Use comparison, not assignment.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /%\s*2\s*=\s*0/, message: 'Replace = with ==.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix length check',
+                description: 'Return True when the string has 5 or more characters.',
+                buggy: 'def long_enough(text):\n    return len(text) > 5',
+                solution: 'def long_enough(text):\n    return len(text) >= 5',
+                rules: {
+                    mustInclude: [
+                        { regex: /len\s*\(\s*text\s*\)\s*>=\s*5/, message: 'Use >= to include length 5.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /len\s*\(\s*text\s*\)\s*>\s*5/, message: 'Length 5 should return True.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix reverse string',
+                description: 'Return the reversed string.',
+                buggy: 'def reverse_text(text):\n    return text[::1]',
+                solution: 'def reverse_text(text):\n    return text[::-1]',
+                rules: {
+                    mustInclude: [
+                        { regex: /\[::\-1\]/, message: 'Use slicing with -1 step.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\[::1\]/, message: 'This does not reverse the string.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix palindrome check',
+                description: 'Return True when the string is a palindrome.',
+                buggy: 'def is_palindrome(text):\n    return text != text[::-1]',
+                solution: 'def is_palindrome(text):\n    return text == text[::-1]',
+                rules: {
+                    mustInclude: [
+                        { regex: /==\s*text\[\:\:\-1\]/, message: 'Compare for equality.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /!=\s*text\[\:\:\-1\]/, message: 'Use == for palindromes.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix vowel counter',
+                description: 'Count vowels even when the text has uppercase letters.',
+                buggy: 'def count_vowels(text):\n    vowels = \"aeiou\"\n    count = 0\n    for ch in text:\n        if ch in vowels:\n            count += 1\n    return count',
+                solution: 'def count_vowels(text):\n    vowels = \"aeiou\"\n    count = 0\n    for ch in text:\n        if ch.lower() in vowels:\n            count += 1\n    return count',
+                rules: {
+                    mustInclude: [
+                        { regex: /ch\.lower\(\)\s+in\s+vowels/, message: 'Normalize to lowercase before checking vowels.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /ch\s+in\s+vowels/, message: 'Uppercase vowels are missed.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix list append',
+                description: 'Append one item to the list.',
+                buggy: 'def add_item(items, value):\n    items.add(value)\n    return items',
+                solution: 'def add_item(items, value):\n    items.append(value)\n    return items',
+                rules: {
+                    mustInclude: [
+                        { regex: /\.append\(\s*value\s*\)/, message: 'Use append() for lists.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\.add\(\s*value\s*\)/, message: 'Lists do not have add().' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix dict increment',
+                description: 'Increment a counter even if the key is missing.',
+                buggy: 'def increment(counts, key):\n    counts[key] = counts[key] + 1\n    return counts',
+                solution: 'def increment(counts, key):\n    counts[key] = counts.get(key, 0) + 1\n    return counts',
+                rules: {
+                    mustInclude: [
+                        { regex: /get\(\s*key\s*,\s*0\s*\)\s*\+\s*1/, message: 'Use get(key, 0) for missing keys.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /counts\[key\]\s*=\s*counts\[key\]\s*\+\s*1/, message: 'This fails when the key is missing.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix max number',
+                description: 'Return the largest number in the list.',
+                buggy: 'def largest(nums):\n    return min(nums)',
+                solution: 'def largest(nums):\n    return max(nums)',
+                rules: {
+                    mustInclude: [
+                        { regex: /max\(\s*nums\s*\)/, message: 'Use max() for the largest number.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /min\(\s*nums\s*\)/, message: 'min() returns the smallest number.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix average',
+                description: 'Return the average of the numbers.',
+                buggy: 'def average(nums):\n    return sum(nums) / (len(nums) - 1)',
+                solution: 'def average(nums):\n    return sum(nums) / len(nums)',
+                rules: {
+                    mustInclude: [
+                        { regex: /sum\(\s*nums\s*\)\s*\/\s*len\(\s*nums\s*\)/, message: 'Divide by the list length.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /len\(\s*nums\s*\)\s*-\s*1/, message: 'Do not subtract 1 from length.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix trim whitespace',
+                description: 'Remove whitespace from both ends.',
+                buggy: 'def clean(text):\n    return text.lstrip()',
+                solution: 'def clean(text):\n    return text.strip()',
+                rules: {
+                    mustInclude: [
+                        { regex: /\.strip\(\)/, message: 'Use strip() for both ends.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\.lstrip\(\)/, message: 'lstrip() only removes left whitespace.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix word split',
+                description: 'Split a sentence into words.',
+                buggy: 'def words(sentence):\n    return sentence.split(\",\")',
+                solution: 'def words(sentence):\n    return sentence.split()',
+                rules: {
+                    mustInclude: [
+                        { regex: /\.split\(\s*\)/, message: 'Use split() with default whitespace.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\.split\(\s*\",\s*\"\s*\)/, message: 'Do not split on commas.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix sort order',
+                description: 'Return the list sorted ascending.',
+                buggy: 'def sort_items(items):\n    return sorted(items, reverse=True)',
+                solution: 'def sort_items(items):\n    return sorted(items)',
+                rules: {
+                    mustInclude: [
+                        { regex: /sorted\(\s*items\s*\)/, message: 'Use default ascending sort.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /reverse\s*=\s*True/, message: 'Remove reverse=True.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix unique list',
+                description: 'Return a list of unique items.',
+                buggy: 'def unique(items):\n    return set(items)',
+                solution: 'def unique(items):\n    return list(set(items))',
+                rules: {
+                    mustInclude: [
+                        { regex: /list\(\s*set\(\s*items\s*\)\s*\)/, message: 'Convert the set back to a list.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+set\(\s*items\s*\)/, message: 'Return a list, not a set.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix sum of squares',
+                description: 'Return the sum of squares for the list.',
+                buggy: 'def sum_squares(nums):\n    total = 0\n    for n in nums:\n        total += n ^ 2\n    return total',
+                solution: 'def sum_squares(nums):\n    total = 0\n    for n in nums:\n        total += n * n\n    return total',
+                rules: {
+                    mustInclude: [
+                        { regex: /total\s*\+=\s*n\s*\*\s*n/, message: 'Use multiplication for squares.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\^\s*2/, message: '`^` is XOR, not power.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix index lookup',
+                description: 'Return the index of the target.',
+                buggy: 'def find_index(items, target):\n    return items.index',
+                solution: 'def find_index(items, target):\n    return items.index(target)',
+                rules: {
+                    mustInclude: [
+                        { regex: /index\(\s*target\s*\)/, message: 'Call index() with the target.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+items\.index\s*$/, message: 'Call the function instead of returning it.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix inclusive range',
+                description: 'Sum numbers from 1 to n inclusive.',
+                buggy: 'def sum_to(n):\n    total = 0\n    for i in range(1, n):\n        total += i\n    return total',
+                solution: 'def sum_to(n):\n    total = 0\n    for i in range(1, n + 1):\n        total += i\n    return total',
+                rules: {
+                    mustInclude: [
+                        { regex: /range\(\s*1\s*,\s*n\s*\+\s*1\s*\)/, message: 'Use n + 1 to include n.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /range\(\s*1\s*,\s*n\s*\)/, message: 'This excludes n.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix dict merge',
+                description: 'Return a merged dictionary.',
+                buggy: 'def merge_dicts(a, b):\n    return a.update(b)',
+                solution: 'def merge_dicts(a, b):\n    merged = a.copy()\n    merged.update(b)\n    return merged',
+                rules: {
+                    mustInclude: [
+                        { regex: /copy\(\)/, message: 'Copy the first dict before updating.' },
+                        { regex: /merged\.update\(\s*b\s*\)/, message: 'Update the merged dict.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+a\.update\(\s*b\s*\)/, message: 'update() returns None.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix non-negative filter',
+                description: 'Return only numbers that are 0 or higher.',
+                buggy: 'def non_negative(nums):\n    return [n for n in nums if n <= 0]',
+                solution: 'def non_negative(nums):\n    return [n for n in nums if n >= 0]',
+                rules: {
+                    mustInclude: [
+                        { regex: /n\s*>=\s*0/, message: 'Keep values that are >= 0.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /n\s*<=\s*0/, message: 'This keeps negative values instead.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix title case',
+                description: 'Return the name in title case.',
+                buggy: 'def title_name(name):\n    return name.title',
+                solution: 'def title_name(name):\n    return name.title()',
+                rules: {
+                    mustInclude: [
+                        { regex: /title\(\)/, message: 'Call title() with parentheses.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+name\.title\s*$/, message: 'You forgot the parentheses.' }
+                    ]
+                }
+            }
+        ];
+
+        const uniqueJavaScriptTasks = [
+            {
+                title: 'Fix greeting',
+                description: 'Return a greeting with a comma and space.',
+                buggy: 'function greet(name) {\n  return \"Hello\" + name;\n}\n',
+                solution: 'function greet(name) {\n  return \"Hello, \" + name;\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /\"Hello,\s\"\s*\+\s*name/, message: 'Include a comma and space after Hello.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\"Hello\"\s*\+\s*name/, message: 'Missing comma and space.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix isEven',
+                description: 'Return true only when the number is even.',
+                buggy: 'function isEven(n) {\n  return n % 2 = 0;\n}\n',
+                solution: 'function isEven(n) {\n  return n % 2 === 0;\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /%\s*2\s*===\s*0/, message: 'Use === for comparison.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /%\s*2\s*=\s*0/, message: 'Use comparison, not assignment.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix last item',
+                description: 'Return the last item in the array.',
+                buggy: 'function lastItem(items) {\n  return items[items.length];\n}\n',
+                solution: 'function lastItem(items) {\n  return items[items.length - 1];\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /length\s*-\s*1/, message: 'Use length - 1 for the last index.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /items\.length\]/, message: 'Array indexes are zero-based.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix loop sum',
+                description: 'Sum all numbers in the array safely.',
+                buggy: 'function sumAll(nums) {\n  let total = 0;\n  for (let i = 0; i <= nums.length; i++) {\n    total += nums[i];\n  }\n  return total;\n}\n',
+                solution: 'function sumAll(nums) {\n  let total = 0;\n  for (let i = 0; i < nums.length; i++) {\n    total += nums[i];\n  }\n  return total;\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /i\s*<\s*nums\.length/, message: 'Use < to avoid out-of-bounds.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /i\s*<=\s*nums\.length/, message: '`<=` goes past the end.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix parseInt',
+                description: 'Parse the number using base 10.',
+                buggy: 'function toNumber(value) {\n  return parseInt(value);\n}\n',
+                solution: 'function toNumber(value) {\n  return parseInt(value, 10);\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /parseInt\(\s*value\s*,\s*10\s*\)/, message: 'Pass radix 10.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /parseInt\(\s*value\s*\)/, message: 'Missing radix.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix trim',
+                description: 'Remove whitespace from both ends.',
+                buggy: 'function clean(text) {\n  return text.trimStart();\n}\n',
+                solution: 'function clean(text) {\n  return text.trim();\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /\.trim\(\)/, message: 'Use trim() for both ends.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\.trimStart\(\)/, message: 'trimStart() only removes left whitespace.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix contains',
+                description: 'Return true when the value exists in the array.',
+                buggy: 'function contains(items, value) {\n  return items.indexOf(value) == -1;\n}\n',
+                solution: 'function contains(items, value) {\n  return items.indexOf(value) !== -1;\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /indexOf\(value\)\s*!==\s*-1/, message: 'Use !== -1 to check existence.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /indexOf\(value\)\s*==\s*-1/, message: 'This returns true when missing.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix dynamic key',
+                description: 'Access the object using a dynamic key.',
+                buggy: 'function getValue(obj, key) {\n  return obj.key;\n}\n',
+                solution: 'function getValue(obj, key) {\n  return obj[key];\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /obj\[\s*key\s*\]/, message: 'Use bracket notation for dynamic keys.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /obj\.key/, message: 'Dot notation reads a literal property named key.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix template literal',
+                description: 'Use template literals for interpolation.',
+                buggy: 'function hello(name) {\n  return \"Hello, ${name}\";\n}\n',
+                solution: 'function hello(name) {\n  return `Hello, ${name}`;\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /`Hello,\s*\$\{name\}`/, message: 'Use backticks and ${}.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\"Hello,\s*\$\{name\}\"/, message: 'Interpolation does not work in quotes.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix map return',
+                description: 'Return the doubled values.',
+                buggy: 'function double(nums) {\n  return nums.map(n => { n * 2; });\n}\n',
+                solution: 'function double(nums) {\n  return nums.map(n => n * 2);\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /map\(\s*n\s*=>\s*n\s*\*\s*2\s*\)/, message: 'Return the expression from map.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /map\(\s*n\s*=>\s*\{\s*n\s*\*\s*2;\s*\}\s*\)/, message: 'Missing return inside braces.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix reduce',
+                description: 'Sum with a proper initial value.',
+                buggy: 'function sum(nums) {\n  return nums.reduce((total, n) => total + n);\n}\n',
+                solution: 'function sum(nums) {\n  return nums.reduce((total, n) => total + n, 0);\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /reduce\(\s*\(total,\s*n\)\s*=>\s*total\s*\+\s*n,\s*0\s*\)/, message: 'Provide an initial value.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /reduce\(\s*\(total,\s*n\)\s*=>\s*total\s*\+\s*n\s*\)/, message: 'Missing initial value.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix even filter',
+                description: 'Keep only even numbers.',
+                buggy: 'function evenOnly(nums) {\n  return nums.filter(n => n % 2 !== 0);\n}\n',
+                solution: 'function evenOnly(nums) {\n  return nums.filter(n => n % 2 === 0);\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /%\s*2\s*===\s*0/, message: 'Keep even numbers.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /%\s*2\s*!==\s*0/, message: 'This keeps odd numbers.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix word split',
+                description: 'Split a sentence into words.',
+                buggy: 'function words(sentence) {\n  return sentence.split(\",\");\n}\n',
+                solution: 'function words(sentence) {\n  return sentence.split(\" \");\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /split\(\s*\" \"\s*\)/, message: 'Split on spaces.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /split\(\s*\",\"/, message: 'Do not split on commas.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix numeric sort',
+                description: 'Sort numbers in ascending order.',
+                buggy: 'function sortNums(numbers) {\n  return numbers.sort();\n}\n',
+                solution: 'function sortNums(numbers) {\n  return numbers.sort((a, b) => a - b);\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /sort\(\s*\(a,\s*b\)\s*=>\s*a\s*-\s*b\s*\)/, message: 'Provide a numeric comparator.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+numbers\.sort\(\s*\)\s*;/, message: 'Default sort is lexicographic.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix unique array',
+                description: 'Return a unique list of items.',
+                buggy: 'function unique(items) {\n  return new Set(items);\n}\n',
+                solution: 'function unique(items) {\n  return Array.from(new Set(items));\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /Array\.from\(\s*new\s+Set\(\s*items\s*\)\s*\)/, message: 'Convert the Set back to an array.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+new\s+Set\(\s*items\s*\)/, message: 'Return an array, not a Set.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix month number',
+                description: 'Return the month number as 1-12.',
+                buggy: 'function getMonthNumber(date) {\n  return date.getMonth();\n}\n',
+                solution: 'function getMonthNumber(date) {\n  return date.getMonth() + 1;\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /getMonth\(\)\s*\+\s*1/, message: 'Add 1 to the month.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+date\.getMonth\(\)\s*;/, message: 'getMonth() is zero-based.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix JSON parse',
+                description: 'Parse JSON from a string.',
+                buggy: 'function parseJson(text) {\n  return JSON.stringfy(text);\n}\n',
+                solution: 'function parseJson(text) {\n  return JSON.parse(text);\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /JSON\.parse\(\s*text\s*\)/, message: 'Use JSON.parse() for strings.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /JSON\.stringfy/, message: 'stringfy is not correct and stringifies instead.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix range check',
+                description: 'Return true when n is strictly between min and max.',
+                buggy: 'function inRange(n, min, max) {\n  return n > min || n < max;\n}\n',
+                solution: 'function inRange(n, min, max) {\n  return n > min && n < max;\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: />\s*min\s*&&\s*n\s*<\s*max/, message: 'Use AND to satisfy both conditions.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: />\s*min\s*\|\|\s*n\s*<\s*max/, message: 'OR allows values outside the range.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix arrow return',
+                description: 'Return the square of the number.',
+                buggy: 'const square = (n) => { n * n; };',
+                solution: 'const square = (n) => n * n;',
+                rules: {
+                    mustInclude: [
+                        { regex: /=>\s*n\s*\*\s*n\s*;/, message: 'Return the expression directly.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /=>\s*\{\s*n\s*\*\s*n;\s*\}/, message: 'Missing return inside braces.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix repeat string',
+                description: 'Repeat the text N times.',
+                buggy: 'function repeatText(text, times) {\n  return text * times;\n}\n',
+                solution: 'function repeatText(text, times) {\n  return text.repeat(times);\n}\n',
+                rules: {
+                    mustInclude: [
+                        { regex: /text\.repeat\(\s*times\s*\)/, message: 'Use repeat() for strings.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /text\s*\*\s*times/, message: 'Multiplication does not repeat strings.' }
+                    ]
+                }
+            }
+        ];
+
+        const uniqueJavaTasks = [
+            {
+                title: 'Fix max method',
+                description: 'Return the larger of two numbers.',
+                buggy: 'public static int max(int a, int b) {\n    if (a > b) {\n        return b;\n    }\n    return a;\n}',
+                solution: 'public static int max(int a, int b) {\n    if (a > b) {\n        return a;\n    }\n    return b;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /return\s+a\s*;/, message: 'Return a when a is larger.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /if\s*\(a\s*>\s*b\)[\s\S]*return\s+b\s*;/, message: 'Do not return b when a is larger.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix length check',
+                description: 'Return true when the string has 5 or more characters.',
+                buggy: 'public static boolean longEnough(String text) {\n    return text.length() > 5;\n}',
+                solution: 'public static boolean longEnough(String text) {\n    return text.length() >= 5;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /length\(\)\s*>=\s*5/, message: 'Use >= 5 to include length 5.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /length\(\)\s*>\s*5/, message: 'Length 5 should return true.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix empty list check',
+                description: 'Return true when the list is empty.',
+                buggy: 'public static boolean isEmpty(List<String> items) {\n    return items.size() > 0;\n}',
+                solution: 'public static boolean isEmpty(List<String> items) {\n    return items.size() == 0;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /size\(\)\s*==\s*0/, message: 'Use == 0 for empty size.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /size\(\)\s*>\s*0/, message: 'This returns true for non-empty lists.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix array sum',
+                description: 'Sum all numbers in the array.',
+                buggy: 'public static int sum(int[] nums) {\n    int total = 0;\n    for (int i = 0; i < nums.length; i++) {\n        total += 1;\n    }\n    return total;\n}',
+                solution: 'public static int sum(int[] nums) {\n    int total = 0;\n    for (int i = 0; i < nums.length; i++) {\n        total += nums[i];\n    }\n    return total;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /total\s*\+=\s*nums\[i\]/, message: 'Add each array item.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /total\s*\+=\s*1/, message: 'You are counting items, not summing values.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix even check',
+                description: 'Return true only for even numbers.',
+                buggy: 'public static boolean isEven(int n) {\n    return n % 2 = 0;\n}',
+                solution: 'public static boolean isEven(int n) {\n    return n % 2 == 0;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /%\s*2\s*==\s*0/, message: 'Use == for comparison.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /%\s*2\s*=\s*0/, message: 'Use comparison, not assignment.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix string equality',
+                description: 'Compare strings by content.',
+                buggy: 'public static boolean same(String a, String b) {\n    return a == b;\n}',
+                solution: 'public static boolean same(String a, String b) {\n    return a.equals(b);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /\.equals\(\s*b\s*\)/, message: 'Use equals() for string comparison.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+a\s*==\s*b/, message: '== compares references, not content.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix loop bounds',
+                description: 'Loop through the whole array safely.',
+                buggy: 'public static int last(int[] nums) {\n    for (int i = 0; i <= nums.length; i++) {}\n    return nums[nums.length - 1];\n}',
+                solution: 'public static int last(int[] nums) {\n    for (int i = 0; i < nums.length; i++) {}\n    return nums[nums.length - 1];\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /i\s*<\s*nums\.length/, message: 'Use < to avoid out-of-bounds.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /i\s*<=\s*nums\.length/, message: 'This goes past the end.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix average',
+                description: 'Return the average as a double.',
+                buggy: 'public static double average(int[] nums) {\n    int total = 0;\n    for (int n : nums) { total += n; }\n    return total / nums.length;\n}',
+                solution: 'public static double average(int[] nums) {\n    int total = 0;\n    for (int n : nums) { total += n; }\n    return (double) total / nums.length;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /\(double\)\s*total\s*\/\s*nums\.length/, message: 'Cast to double before division.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+total\s*\/\s*nums\.length/, message: 'Integer division loses decimals.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix last index',
+                description: 'Return the last item in the array.',
+                buggy: 'public static int lastItem(int[] nums) {\n    return nums[nums.length];\n}',
+                solution: 'public static int lastItem(int[] nums) {\n    return nums[nums.length - 1];\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /nums\.length\s*-\s*1/, message: 'Use length - 1 for the last index.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /nums\[nums\.length\]/, message: 'Out of bounds index.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix substring search',
+                description: 'Return true if the text contains the substring.',
+                buggy: 'public static boolean contains(String text, String sub) {\n    return text.indexOf(sub) > 0;\n}',
+                solution: 'public static boolean contains(String text, String sub) {\n    return text.indexOf(sub) >= 0;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /indexOf\(sub\)\s*>=\s*0/, message: 'Use >= 0 to include index 0.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /indexOf\(sub\)\s*>\s*0/, message: 'This misses matches at index 0.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix min function',
+                description: 'Return the smaller of two numbers.',
+                buggy: 'public static int min(int a, int b) {\n    return Math.max(a, b);\n}',
+                solution: 'public static int min(int a, int b) {\n    return Math.min(a, b);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /Math\.min\(\s*a\s*,\s*b\s*\)/, message: 'Use Math.min().' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /Math\.max\(\s*a\s*,\s*b\s*\)/, message: 'Math.max() is incorrect.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix trim',
+                description: 'Remove whitespace around the text.',
+                buggy: 'public static String clean(String text) {\n    return text.strip();\n}',
+                solution: 'public static String clean(String text) {\n    return text.trim();\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /\.trim\(\)/, message: 'Use trim() for whitespace.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\.strip\(\)/, message: 'Use trim() for broader compatibility.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix toggle',
+                description: 'Toggle the boolean value.',
+                buggy: 'public static boolean toggle(boolean flag) {\n    flag == false;\n    return flag;\n}',
+                solution: 'public static boolean toggle(boolean flag) {\n    flag = !flag;\n    return flag;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /flag\s*=\s*!flag/, message: 'Invert the flag with !.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /flag\s*==\s*false/, message: 'This does not update the variable.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix factorial',
+                description: 'Return the factorial of n.',
+                buggy: 'public static int factorial(int n) {\n    int result = 1;\n    for (int i = 2; i <= n; i++) {\n        result += i;\n    }\n    return result;\n}',
+                solution: 'public static int factorial(int n) {\n    int result = 1;\n    for (int i = 2; i <= n; i++) {\n        result *= i;\n    }\n    return result;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /result\s*\*=\s*i/, message: 'Multiply for factorial.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /result\s*\+=\s*i/, message: 'Addition is incorrect for factorial.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix for-each sum',
+                description: 'Sum values using a for-each loop.',
+                buggy: 'public static int sum(int[] nums) {\n    int total = 0;\n    for (int n : nums) {\n        total++;\n    }\n    return total;\n}',
+                solution: 'public static int sum(int[] nums) {\n    int total = 0;\n    for (int n : nums) {\n        total += n;\n    }\n    return total;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /total\s*\+=\s*n/, message: 'Add the value, not 1.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /total\+\+/, message: 'This only counts items.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix parse int',
+                description: 'Parse the number using base 10.',
+                buggy: 'public static int parse(String value) {\n    return Integer.parseInt(value, 2);\n}',
+                solution: 'public static int parse(String value) {\n    return Integer.parseInt(value, 10);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /parseInt\(\s*value\s*,\s*10\s*\)/, message: 'Use radix 10.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /parseInt\(\s*value\s*,\s*2\s*\)/, message: 'Radix 2 is incorrect.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix uppercase first letter',
+                description: 'Capitalize the first letter.',
+                buggy: 'public static String cap(String word) {\n    return word.substring(0,1).toUppercase() + word.substring(1);\n}',
+                solution: 'public static String cap(String word) {\n    return word.substring(0,1).toUpperCase() + word.substring(1);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /toUpperCase\(\)/, message: 'Use toUpperCase() with correct casing.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /toUppercase\(\)/, message: 'Method name is case-sensitive.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix absolute value',
+                description: 'Return the absolute value.',
+                buggy: 'public static int abs(int n) {\n    if (n < 0) return n;\n    return n;\n}',
+                solution: 'public static int abs(int n) {\n    if (n < 0) return -n;\n    return n;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /return\s+-n\s*;/, message: 'Negate negative values.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /if\s*\(n\s*<\s*0\)\s*return\s+n\s*;/, message: 'Negative values should be negated.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix null check',
+                description: 'Avoid NullPointerException when checking length.',
+                buggy: 'public static boolean hasText(String text) {\n    return text.length() > 0 && text != null;\n}',
+                solution: 'public static boolean hasText(String text) {\n    return text != null && text.length() > 0;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /text\s*!=\s*null\s*&&\s*text\.length\(\)\s*>\s*0/, message: 'Check null before length().' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /text\.length\(\)\s*>\s*0\s*&&\s*text\s*!=\s*null/, message: 'Null check must come first.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix StringBuilder append',
+                description: 'Append text to a StringBuilder.',
+                buggy: 'public static String build(String a, String b) {\n    StringBuilder sb = new StringBuilder();\n    sb.add(a);\n    sb.add(b);\n    return sb.toString();\n}',
+                solution: 'public static String build(String a, String b) {\n    StringBuilder sb = new StringBuilder();\n    sb.append(a);\n    sb.append(b);\n    return sb.toString();\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /\.append\(\s*a\s*\)/, message: 'Use append() on StringBuilder.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\.add\(\s*a\s*\)/, message: 'StringBuilder does not have add().' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix case-insensitive compare',
+                description: 'Compare strings ignoring case.',
+                buggy: 'public static boolean same(String a, String b) {\n    return a.equals(b);\n}',
+                solution: 'public static boolean same(String a, String b) {\n    return a.equalsIgnoreCase(b);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /equalsIgnoreCase\(\s*b\s*\)/, message: 'Use equalsIgnoreCase().' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /equals\(\s*b\s*\)/, message: 'This is case-sensitive.' }
+                    ]
+                }
+            }
+        ];
+
+        const uniqueCppTasks = [
+            {
+                title: 'Fix square',
+                description: 'Return the square of the number.',
+                buggy: 'int square(int n) {\n    return n ^ 2;\n}',
+                solution: 'int square(int n) {\n    return n * n;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /return\s+n\s*\*\s*n/, message: 'Use multiplication for squaring.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\^\s*2/, message: '`^` is XOR, not power.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix loop bounds',
+                description: 'Sum all numbers in the vector safely.',
+                buggy: 'int sumAll(const vector<int>& nums) {\n    int total = 0;\n    for (int i = 0; i <= nums.size(); i++) {\n        total += nums[i];\n    }\n    return total;\n}',
+                solution: 'int sumAll(const vector<int>& nums) {\n    int total = 0;\n    for (int i = 0; i < nums.size(); i++) {\n        total += nums[i];\n    }\n    return total;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /i\s*<\s*nums\.size\(\)/, message: 'Use < to avoid going out of bounds.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /i\s*<=\s*nums\.size\(\)/, message: '`<=` reads past the end.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix even check',
+                description: 'Return true only when the number is even.',
+                buggy: 'bool isEven(int n) {\n    return n % 2 = 0;\n}',
+                solution: 'bool isEven(int n) {\n    return n % 2 == 0;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /%\s*2\s*==\s*0/, message: 'Use == for comparison.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /%\s*2\s*=\s*0/, message: 'Use comparison, not assignment.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix length check',
+                description: 'Return true when the string has 5 or more characters.',
+                buggy: 'bool longEnough(const string& text) {\n    return text.size() > 5;\n}',
+                solution: 'bool longEnough(const string& text) {\n    return text.size() >= 5;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /size\(\)\s*>=\s*5/, message: 'Use >= 5 to include length 5.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /size\(\)\s*>\s*5/, message: 'Length 5 should return true.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix max value',
+                description: 'Return the larger of two values.',
+                buggy: 'int maxVal(int a, int b) {\n    return std::min(a, b);\n}',
+                solution: 'int maxVal(int a, int b) {\n    return std::max(a, b);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /std::max\(\s*a\s*,\s*b\s*\)/, message: 'Use std::max().' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /std::min\(\s*a\s*,\s*b\s*\)/, message: 'std::min returns the smaller value.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix last index',
+                description: 'Return the last item in the vector.',
+                buggy: 'int lastItem(const vector<int>& nums) {\n    return nums[nums.size()];\n}',
+                solution: 'int lastItem(const vector<int>& nums) {\n    return nums[nums.size() - 1];\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /size\(\)\s*-\s*1/, message: 'Use size() - 1 for the last index.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /nums\[nums\.size\(\)\]/, message: 'Out of bounds index.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix sum operator',
+                description: 'Accumulate the sum correctly.',
+                buggy: 'int sum(const vector<int>& nums) {\n    int total = 0;\n    for (int n : nums) {\n        total =+ n;\n    }\n    return total;\n}',
+                solution: 'int sum(const vector<int>& nums) {\n    int total = 0;\n    for (int n : nums) {\n        total += n;\n    }\n    return total;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /total\s*\+=\s*n/, message: 'Use += to accumulate.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /total\s*=\+\s*n/, message: 'This resets the value each time.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix average',
+                description: 'Return the average as a double.',
+                buggy: 'double average(const vector<int>& nums) {\n    int total = 0;\n    for (int n : nums) total += n;\n    return total / nums.size();\n}',
+                solution: 'double average(const vector<int>& nums) {\n    int total = 0;\n    for (int n : nums) total += n;\n    return static_cast<double>(total) / nums.size();\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /static_cast<double>\(\s*total\s*\)/, message: 'Cast to double before division.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+total\s*\/\s*nums\.size\(\)/, message: 'Integer division loses decimals.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix factorial',
+                description: 'Return the factorial of n.',
+                buggy: 'int factorial(int n) {\n    int result = 1;\n    for (int i = 2; i <= n; i++) {\n        result += i;\n    }\n    return result;\n}',
+                solution: 'int factorial(int n) {\n    int result = 1;\n    for (int i = 2; i <= n; i++) {\n        result *= i;\n    }\n    return result;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /result\s*\*=\s*i/, message: 'Multiply for factorial.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /result\s*\+=\s*i/, message: 'Addition is incorrect for factorial.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix palindrome',
+                description: 'Return true when the text is a palindrome.',
+                buggy: 'bool isPalindrome(const string& text) {\n    string rev(text.rbegin(), text.rend());\n    return text != rev;\n}',
+                solution: 'bool isPalindrome(const string& text) {\n    string rev(text.rbegin(), text.rend());\n    return text == rev;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /text\s*==\s*rev/, message: 'Compare for equality.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /text\s*!=\s*rev/, message: 'Use == for palindromes.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix count occurrences',
+                description: 'Count how many times target appears.',
+                buggy: 'int countOf(const vector<int>& nums, int target) {\n    int count = 0;\n    for (int n : nums) {\n        if (n == target) {\n            count = 1;\n        }\n    }\n    return count;\n}',
+                solution: 'int countOf(const vector<int>& nums, int target) {\n    int count = 0;\n    for (int n : nums) {\n        if (n == target) {\n            count += 1;\n        }\n    }\n    return count;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /count\s*\+=\s*1/, message: 'Increment the count.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /count\s*=\s*1/, message: 'This overwrites the count.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix sort',
+                description: 'Sort the vector in ascending order.',
+                buggy: 'void sortNums(vector<int>& nums) {\n    sort(nums.begin, nums.end);\n}',
+                solution: 'void sortNums(vector<int>& nums) {\n    sort(nums.begin(), nums.end());\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /sort\(\s*nums\.begin\(\)\s*,\s*nums\.end\(\)\s*\)/, message: 'Call begin() and end().' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /nums\.begin\s*,\s*nums\.end/, message: 'Missing parentheses on iterators.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix swap',
+                description: 'Swap two values.',
+                buggy: 'void swapVals(int& a, int& b) {\n    a = b;\n    b = a;\n}',
+                solution: 'void swapVals(int& a, int& b) {\n    int temp = a;\n    a = b;\n    b = temp;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /int\s+temp\s*=\s*a;/, message: 'Use a temporary variable.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /a\s*=\s*b;\s*b\s*=\s*a;/, message: 'This loses the original value of a.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix find element',
+                description: 'Return true when the target exists.',
+                buggy: 'bool contains(const vector<int>& nums, int target) {\n    for (int n : nums) {\n        if (n == target) return true;\n        return false;\n    }\n    return false;\n}',
+                solution: 'bool contains(const vector<int>& nums, int target) {\n    for (int n : nums) {\n        if (n == target) return true;\n    }\n    return false;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /for\s*\(int\s+n\s*:\s*nums\)[\s\S]*if\s*\(n\s*==\s*target\)\s*return\s*true;/, message: 'Return true only when found.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+false;\s*\}/, message: 'Do not return false inside the loop.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix remove spaces',
+                description: 'Remove spaces from the string.',
+                buggy: 'string removeSpaces(string text) {\n    text.erase(remove(text.begin(), text.end(), \"\"), text.end());\n    return text;\n}',
+                solution: 'string removeSpaces(string text) {\n    text.erase(remove(text.begin(), text.end(), \' \'), text.end());\n    return text;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /remove\(\s*text\.begin\(\)\s*,\s*text\.end\(\)\s*,\s*' '\s*\)/, message: 'Remove space characters.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /remove\(\s*text\.begin\(\)\s*,\s*text\.end\(\)\s*,\s*\"\"\s*\)/, message: 'Use a space char, not empty string.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix min in array',
+                description: 'Return the smallest number.',
+                buggy: 'int minVal(const vector<int>& nums) {\n    int best = nums[0];\n    for (int n : nums) {\n        if (n > best) best = n;\n    }\n    return best;\n}',
+                solution: 'int minVal(const vector<int>& nums) {\n    int best = nums[0];\n    for (int n : nums) {\n        if (n < best) best = n;\n    }\n    return best;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /if\s*\(n\s*<\s*best\)/, message: 'Use < to track the minimum.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /if\s*\(n\s*>\s*best\)/, message: 'This tracks the maximum instead.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix push back',
+                description: 'Add a value to the end of the vector.',
+                buggy: 'void addItem(vector<int>& nums, int value) {\n    nums.push(value);\n}',
+                solution: 'void addItem(vector<int>& nums, int value) {\n    nums.push_back(value);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /push_back\(\s*value\s*\)/, message: 'Use push_back() for vectors.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /push\(\s*value\s*\)/, message: 'Vectors do not have push().' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix equality in if',
+                description: 'Compare values without assignment.',
+                buggy: 'bool isSame(int a, int b) {\n    if (a = b) return true;\n    return false;\n}',
+                solution: 'bool isSame(int a, int b) {\n    if (a == b) return true;\n    return false;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /a\s*==\s*b/, message: 'Use == for comparison.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /if\s*\(a\s*=\s*b\)/, message: 'Do not assign in the if condition.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix divisibility',
+                description: 'Return true when n is divisible by 3.',
+                buggy: 'bool divisibleByThree(int n) {\n    return n / 3 == 0;\n}',
+                solution: 'bool divisibleByThree(int n) {\n    return n % 3 == 0;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /%\s*3\s*==\s*0/, message: 'Use modulo for divisibility.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\/\s*3\s*==\s*0/, message: 'Division does not test divisibility.' }
+                    ]
+                }
+            }
+        ];
+
+        const uniqueSqlTasks = [
+            {
+                title: 'Fix string comparison',
+                description: 'Compare the status to a string literal.',
+                buggy: 'SELECT COUNT(*) FROM users WHERE status = active;',
+                solution: 'SELECT COUNT(*) FROM users WHERE status = \'active\';',
+                rules: {
+                    mustInclude: [
+                        { regex: /status\s*=\s*'active'/i, message: 'Wrap the string value in quotes.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /status\s*=\s*active/i, message: 'Unquoted strings are invalid.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix date filter',
+                description: 'Include the start date in the results.',
+                buggy: 'SELECT * FROM orders WHERE order_date > \'2025-01-01\';',
+                solution: 'SELECT * FROM orders WHERE order_date >= \'2025-01-01\';',
+                rules: {
+                    mustInclude: [
+                        { regex: /order_date\s*>=\s*'2025-01-01'/i, message: 'Use >= to include the start date.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /order_date\s*>\s*'2025-01-01'/i, message: 'This excludes the first day.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix join',
+                description: 'Add the missing ON keyword.',
+                buggy: 'SELECT o.id, c.name FROM orders o JOIN customers c o.customer_id = c.id;',
+                solution: 'SELECT o.id, c.name FROM orders o JOIN customers c ON o.customer_id = c.id;',
+                rules: {
+                    mustInclude: [
+                        { regex: /\bON\b/i, message: 'JOIN requires ON before the condition.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /JOIN\s+\w+\s+\w+\s+\w+\./i, message: 'Missing ON keyword.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix LIMIT',
+                description: 'Use proper LIMIT syntax.',
+                buggy: 'SELECT * FROM users LIMIT = 10;',
+                solution: 'SELECT * FROM users LIMIT 10;',
+                rules: {
+                    mustInclude: [
+                        { regex: /LIMIT\s+10/i, message: 'Remove the = sign.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /LIMIT\s*=\s*10/i, message: 'LIMIT does not use =.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix GROUP BY',
+                description: 'Group by the category column.',
+                buggy: 'SELECT category, COUNT(*) FROM products;',
+                solution: 'SELECT category, COUNT(*) FROM products GROUP BY category;',
+                rules: {
+                    mustInclude: [
+                        { regex: /GROUP\s+BY\s+category/i, message: 'Add GROUP BY category.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /SELECT\s+category,\s*COUNT\(\*\)\s+FROM\s+products\s*;?/i, message: 'Missing GROUP BY.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix HAVING',
+                description: 'Filter by aggregated count.',
+                buggy: 'SELECT user_id, COUNT(*) FROM logins WHERE COUNT(*) > 3 GROUP BY user_id;',
+                solution: 'SELECT user_id, COUNT(*) FROM logins GROUP BY user_id HAVING COUNT(*) > 3;',
+                rules: {
+                    mustInclude: [
+                        { regex: /HAVING\s+COUNT\(\*\)\s*>\s*3/i, message: 'Use HAVING for aggregates.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /WHERE\s+COUNT\(\*\)\s*>\s*3/i, message: 'WHERE cannot use aggregates.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix ORDER BY',
+                description: 'Sort newest first.',
+                buggy: 'SELECT * FROM posts ORDER BY created_at;',
+                solution: 'SELECT * FROM posts ORDER BY created_at DESC;',
+                rules: {
+                    mustInclude: [
+                        { regex: /ORDER\s+BY\s+created_at\s+DESC/i, message: 'Add DESC for newest first.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /ORDER\s+BY\s+created_at\s*;?/i, message: 'Missing DESC.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix COUNT DISTINCT',
+                description: 'Count unique user ids.',
+                buggy: 'SELECT COUNT(user_id) FROM logins;',
+                solution: 'SELECT COUNT(DISTINCT user_id) FROM logins;',
+                rules: {
+                    mustInclude: [
+                        { regex: /COUNT\s*\(\s*DISTINCT\s+user_id\s*\)/i, message: 'Use COUNT(DISTINCT ...).' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /COUNT\s*\(\s*user_id\s*\)/i, message: 'This counts duplicates.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix NULL check',
+                description: 'Find rows where deleted_at is NULL.',
+                buggy: 'SELECT * FROM items WHERE deleted_at = NULL;',
+                solution: 'SELECT * FROM items WHERE deleted_at IS NULL;',
+                rules: {
+                    mustInclude: [
+                        { regex: /deleted_at\s+IS\s+NULL/i, message: 'Use IS NULL for null checks.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /deleted_at\s*=\s*NULL/i, message: 'Use IS NULL, not = NULL.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix BETWEEN',
+                description: 'Filter prices between 10 and 20.',
+                buggy: 'SELECT * FROM products WHERE price > 10 AND price < 20;',
+                solution: 'SELECT * FROM products WHERE price BETWEEN 10 AND 20;',
+                rules: {
+                    mustInclude: [
+                        { regex: /price\s+BETWEEN\s+10\s+AND\s+20/i, message: 'Use BETWEEN for the range.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /price\s*>\s*10\s+AND\s+price\s*<\s*20/i, message: 'Use BETWEEN for clarity.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix IN clause',
+                description: 'Filter by multiple statuses.',
+                buggy: 'SELECT * FROM tickets WHERE status = (\'open\', \'pending\');',
+                solution: 'SELECT * FROM tickets WHERE status IN (\'open\', \'pending\');',
+                rules: {
+                    mustInclude: [
+                        { regex: /status\s+IN\s*\(\s*'open'\s*,\s*'pending'\s*\)/i, message: 'Use IN for multiple values.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /status\s*=\s*\(/i, message: 'Use IN, not = with a list.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix LIKE pattern',
+                description: 'Find names that start with Al.',
+                buggy: 'SELECT * FROM users WHERE name LIKE \'Al\';',
+                solution: 'SELECT * FROM users WHERE name LIKE \'Al%\';',
+                rules: {
+                    mustInclude: [
+                        { regex: /LIKE\s+'Al%'/i, message: 'Add % wildcard.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /LIKE\s+'Al'\s*;?/i, message: 'Missing wildcard.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix alias',
+                description: 'Alias the count as total.',
+                buggy: 'SELECT COUNT(*) total FROM orders;',
+                solution: 'SELECT COUNT(*) AS total FROM orders;',
+                rules: {
+                    mustInclude: [
+                        { regex: /AS\s+total/i, message: 'Use AS for alias clarity.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /COUNT\(\*\)\s+total/i, message: 'Add AS for readability.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix UPDATE',
+                description: 'Update only one user by id.',
+                buggy: 'UPDATE users SET status = \'active\';',
+                solution: 'UPDATE users SET status = \'active\' WHERE id = 1;',
+                rules: {
+                    mustInclude: [
+                        { regex: /WHERE\s+id\s*=\s*1/i, message: 'Add a WHERE clause.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /UPDATE\s+users\s+SET\s+status\s*=\s*'active'\s*;?/i, message: 'This updates all rows.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix DELETE',
+                description: 'Delete a single row by id.',
+                buggy: 'DELETE FROM users;',
+                solution: 'DELETE FROM users WHERE id = 5;',
+                rules: {
+                    mustInclude: [
+                        { regex: /WHERE\s+id\s*=\s*5/i, message: 'Add a WHERE clause.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /DELETE\s+FROM\s+users\s*;?/i, message: 'This deletes all rows.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix UNION ALL',
+                description: 'Combine results and keep duplicates.',
+                buggy: 'SELECT id FROM a UNION SELECT id FROM b;',
+                solution: 'SELECT id FROM a UNION ALL SELECT id FROM b;',
+                rules: {
+                    mustInclude: [
+                        { regex: /UNION\s+ALL/i, message: 'Use UNION ALL to keep duplicates.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /UNION\s+SELECT/i, message: 'UNION removes duplicates.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix LEFT JOIN',
+                description: 'Keep all orders even without a customer.',
+                buggy: 'SELECT o.id, c.name FROM orders o INNER JOIN customers c ON o.customer_id = c.id;',
+                solution: 'SELECT o.id, c.name FROM orders o LEFT JOIN customers c ON o.customer_id = c.id;',
+                rules: {
+                    mustInclude: [
+                        { regex: /LEFT\s+JOIN/i, message: 'Use LEFT JOIN to keep all orders.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /INNER\s+JOIN/i, message: 'INNER JOIN drops unmatched rows.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix COALESCE',
+                description: 'Replace NULL with 0.',
+                buggy: 'SELECT discount FROM products;',
+                solution: 'SELECT COALESCE(discount, 0) FROM products;',
+                rules: {
+                    mustInclude: [
+                        { regex: /COALESCE\(\s*discount\s*,\s*0\s*\)/i, message: 'Use COALESCE for NULLs.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /SELECT\s+discount\s+FROM\s+products/i, message: 'NULL values are not handled.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix NOT IN',
+                description: 'Exclude specific statuses.',
+                buggy: 'SELECT * FROM tickets WHERE status IN (\'closed\', \'resolved\');',
+                solution: 'SELECT * FROM tickets WHERE status NOT IN (\'closed\', \'resolved\');',
+                rules: {
+                    mustInclude: [
+                        { regex: /NOT\s+IN\s*\(\s*'closed'\s*,\s*'resolved'\s*\)/i, message: 'Use NOT IN to exclude.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /status\s+IN\s*\(/i, message: 'This includes the unwanted statuses.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix CASE statement',
+                description: 'Label orders by amount.',
+                buggy: 'SELECT id, CASE amount > 100 THEN \'big\' ELSE \'small\' END FROM orders;',
+                solution: 'SELECT id, CASE WHEN amount > 100 THEN \'big\' ELSE \'small\' END FROM orders;',
+                rules: {
+                    mustInclude: [
+                        { regex: /CASE\s+WHEN\s+amount\s*>\s*100\s+THEN/i, message: 'Use CASE WHEN syntax.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /CASE\s+amount\s*>\s*100\s+THEN/i, message: 'CASE requires WHEN.' }
+                    ]
+                }
+            }
+        ];
+
+        const uniqueTypeScriptTasks = [
+            {
+                title: 'Fix toUpperCase',
+                description: 'Return the uppercase string.',
+                buggy: 'function toUpper(name: string): string {\n    return name.toUpperCase;\n}',
+                solution: 'function toUpper(name: string): string {\n    return name.toUpperCase();\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /toUpperCase\(\)/, message: 'Call the function with parentheses.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /toUpperCase\s*;/, message: 'You forgot to call the method.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix typed sum',
+                description: 'Return a number and add both values.',
+                buggy: 'function sum(a: number, b: number): number {\n    return a + \"b\";\n}',
+                solution: 'function sum(a: number, b: number): number {\n    return a + b;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /return\s+a\s*\+\s*b/, message: 'Add the two numbers directly.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\"b\"/, message: 'Remove the string literal.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix length check',
+                description: 'Return true when the string has 5 or more characters.',
+                buggy: 'function longEnough(text: string): boolean {\n    return text.length > 5;\n}',
+                solution: 'function longEnough(text: string): boolean {\n    return text.length >= 5;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /length\s*>=\s*5/, message: 'Use >= 5 to include length 5.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /length\s*>\s*5/, message: 'Length 5 should return true.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix parseInt',
+                description: 'Parse the number using base 10.',
+                buggy: 'function toNumber(value: string): number {\n    return parseInt(value);\n}',
+                solution: 'function toNumber(value: string): number {\n    return parseInt(value, 10);\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /parseInt\(\s*value\s*,\s*10\s*\)/, message: 'Pass radix 10.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /parseInt\(\s*value\s*\)/, message: 'Missing radix.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix optional chaining',
+                description: 'Avoid errors when user is null.',
+                buggy: 'function getName(user: { name: string } | null): string {\n    return user.name;\n}',
+                solution: 'function getName(user: { name: string } | null): string {\n    return user?.name || \"\";\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /user\?\./, message: 'Use optional chaining.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+user\.name/, message: 'This fails when user is null.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix union narrowing',
+                description: 'Return a number from a union type.',
+                buggy: 'function size(value: string | number): number {\n    return value.length;\n}',
+                solution: 'function size(value: string | number): number {\n    return typeof value === \"string\" ? value.length : value;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /typeof\s+value\s*===\s*\"string\"/, message: 'Narrow the union with typeof.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /value\.length/, message: 'Numbers do not have length.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix interface type',
+                description: 'Age should be a number.',
+                buggy: 'interface User { name: string; age: string; }',
+                solution: 'interface User { name: string; age: number; }',
+                rules: {
+                    mustInclude: [
+                        { regex: /age:\s*number/, message: 'Age should be a number.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /age:\s*string/, message: 'Age should not be a string.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix readonly assignment',
+                description: 'Do not assign to a readonly property.',
+                buggy: 'interface Config { readonly mode: string; }\nconst cfg: Config = { mode: \"dark\" };\ncfg.mode = \"light\";',
+                solution: 'interface Config { readonly mode: string; }\nconst cfg: Config = { mode: \"dark\" };\nconst nextMode = cfg.mode;',
+                rules: {
+                    mustInclude: [
+                        { regex: /readonly\s+mode/, message: 'Keep the property readonly.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /cfg\.mode\s*=\s*\"light\"/, message: 'Do not assign to readonly properties.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix map return',
+                description: 'Return doubled values.',
+                buggy: 'const double = (nums: number[]) => nums.map(n => { n * 2; });',
+                solution: 'const double = (nums: number[]) => nums.map(n => n * 2);',
+                rules: {
+                    mustInclude: [
+                        { regex: /map\(\s*n\s*=>\s*n\s*\*\s*2\s*\)/, message: 'Return the expression from map.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /map\(\s*n\s*=>\s*\{\s*n\s*\*\s*2;\s*\}\s*\)/, message: 'Missing return inside braces.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix enum usage',
+                description: 'Use the enum value, not a string.',
+                buggy: 'enum Status { Active, Inactive }\nconst status: Status = \"Active\";',
+                solution: 'enum Status { Active, Inactive }\nconst status: Status = Status.Active;',
+                rules: {
+                    mustInclude: [
+                        { regex: /Status\.Active/, message: 'Use the enum value.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\"Active\"/, message: 'Do not assign a string.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix generic return',
+                description: 'Return the first item of the array.',
+                buggy: 'function first<T>(items: T[]): T {\n    return items[0];\n}\nconst value: string = first([1, 2, 3]);',
+                solution: 'function first<T>(items: T[]): T {\n    return items[0];\n}\nconst value: number = first([1, 2, 3]);',
+                rules: {
+                    mustInclude: [
+                        { regex: /const\s+value:\s+number/, message: 'Match the generic type.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /const\s+value:\s+string/, message: 'Do not force the wrong type.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix promise return',
+                description: 'Return a Promise of string.',
+                buggy: 'function fetchName(): Promise<string> {\n    return \"Alex\";\n}',
+                solution: 'function fetchName(): Promise<string> {\n    return Promise.resolve(\"Alex\");\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /Promise\.resolve\(\s*\"Alex\"\s*\)/, message: 'Return a Promise.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+\"Alex\"/, message: 'Return a Promise, not a string.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix tuple access',
+                description: 'Return the second item of the tuple.',
+                buggy: 'const point: [number, number] = [3, 4];\nconst y = point[2];',
+                solution: 'const point: [number, number] = [3, 4];\nconst y = point[1];',
+                rules: {
+                    mustInclude: [
+                        { regex: /point\[1\]/, message: 'Tuples are zero-based.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /point\[2\]/, message: 'Index 2 is out of range.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix non-null assertion',
+                description: 'Handle possibly null values.',
+                buggy: 'function len(value: string | null): number {\n    return value.length;\n}',
+                solution: 'function len(value: string | null): number {\n    return value ? value.length : 0;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /value\s*\?\s*value\.length\s*:\s*0/, message: 'Check for null before length.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /value\.length/, message: 'This crashes on null.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix boolean return',
+                description: 'Return a boolean, not a string.',
+                buggy: 'function isActive(flag: boolean): boolean {\n    return flag ? \"yes\" : \"no\";\n}',
+                solution: 'function isActive(flag: boolean): boolean {\n    return flag;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /return\s+flag\s*;/, message: 'Return a boolean.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\"yes\"|\"no\"/, message: 'Do not return strings.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix destructuring rename',
+                description: 'Rename the property to a local variable.',
+                buggy: 'const user = { name: \"Sam\" };\nconst { username } = user;',
+                solution: 'const user = { name: \"Sam\" };\nconst { name: username } = user;',
+                rules: {
+                    mustInclude: [
+                        { regex: /name:\s*username/, message: 'Rename during destructuring.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\{\s*username\s*\}/, message: 'There is no username property.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix default parameter',
+                description: 'Provide a default value for the parameter.',
+                buggy: 'function greet(name?: string): string {\n    return \"Hi \" + name;\n}',
+                solution: 'function greet(name: string = \"Guest\"): string {\n    return \"Hi \" + name;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /name:\s*string\s*=\s*\"Guest\"/, message: 'Add a default value.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /name\?:\s*string/, message: 'Optional alone can lead to undefined.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix array clone',
+                description: 'Return a shallow copy of the array.',
+                buggy: 'function clone(items: number[]): number[] {\n    return items;\n}',
+                solution: 'function clone(items: number[]): number[] {\n    return [...items];\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /\[\.\.\.items\]/, message: 'Use spread to clone.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /return\s+items\s*;/, message: 'This returns the same reference.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix type guard filter',
+                description: 'Filter out undefined values.',
+                buggy: 'const values: Array<string | undefined> = [\"a\", undefined];\nconst cleaned = values.filter(v => v === undefined);',
+                solution: 'const values: Array<string | undefined> = [\"a\", undefined];\nconst cleaned = values.filter((v): v is string => v !== undefined);',
+                rules: {
+                    mustInclude: [
+                        { regex: /v\s*!==\s*undefined/, message: 'Filter out undefined values.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /v\s*===\s*undefined/, message: 'This keeps undefined values.' }
+                    ]
+                }
+            },
+            {
+                title: 'Fix template literal',
+                description: 'Use template literals for interpolation.',
+                buggy: 'function label(name: string): string {\n    return \"User: ${name}\";\n}',
+                solution: 'function label(name: string): string {\n    return `User: ${name}`;\n}',
+                rules: {
+                    mustInclude: [
+                        { regex: /`User:\s*\$\{name\}`/, message: 'Use backticks and ${}.' }
+                    ],
+                    mustNotInclude: [
+                        { regex: /\"User:\s*\$\{name\}\"/, message: 'Interpolation does not work in quotes.' }
+                    ]
+                }
+            }
+        ];
+
+        const courseOverrides = {
+            Python: uniquePythonTasks,
+            JavaScript: uniqueJavaScriptTasks,
+            Java: uniqueJavaTasks,
+            "C++": uniqueCppTasks,
+            SQL: uniqueSqlTasks,
+            TypeScript: uniqueTypeScriptTasks
+        };
+
+        Object.keys(courseOverrides).forEach((course) => {
+            if (debugCourses[course]) {
+                debugCourses[course].tasks = courseOverrides[course];
+            }
+        });
+
+        const MIN_SNIPPET_LINES = 10;
+        const MAX_SNIPPET_LINES = 25;
+
+        function countLines(code) {
+            return String(code || '').split('\n').length;
+        }
+
+        function commentPrefixFor(course) {
+            if (course === 'Python') return '# ';
+            if (course === 'SQL') return '-- ';
+            return '// ';
+        }
+
+        function addPreamble(code, lines, commentPrefix) {
+            if (!code || !Array.isArray(lines) || !lines.length) return code;
+            const prefix = commentPrefix || '';
+            const preamble = lines.map((line) => `${prefix}${line}`).join('\n');
+            return `${preamble}\n${code}`;
+        }
+
+        function insertAfterFirstLine(code, insertLines) {
+            if (!code || !Array.isArray(insertLines) || !insertLines.length) return code;
+            const newlineIndex = code.indexOf('\n');
+            if (newlineIndex === -1) {
+                const insertion = insertLines.map((line) => `    ${line}`).join('\n');
+                return `${code}\n${insertion}`;
+            }
+            const rest = code.slice(newlineIndex + 1);
+            let indent = '    ';
+            const indentMatch = rest.match(/^[ \t]*/);
+            if (indentMatch && indentMatch[0].length) indent = indentMatch[0];
+            const insertion = insertLines.map((line) => `${indent}${line}`).join('\n');
+            return `${code.slice(0, newlineIndex + 1)}${insertion}\n${rest}`;
+        }
+
+        function insertAfterFirstBlockLine(code, insertLines) {
+            if (!code || !Array.isArray(insertLines) || !insertLines.length) return code;
+            const braceIndex = code.indexOf('{');
+            if (braceIndex === -1) return code;
+            const newlineIndex = code.indexOf('\n', braceIndex);
+            const rest = newlineIndex === -1
+                ? code.slice(braceIndex + 1)
+                : code.slice(newlineIndex + 1);
+            let indent = '    ';
+            if (newlineIndex !== -1) {
+                const indentMatch = rest.match(/^[ \t]*/);
+                if (indentMatch && indentMatch[0].length) indent = indentMatch[0];
+            }
+            const insertion = insertLines.map((line) => `${indent}${line}`).join('\n');
+            const head = newlineIndex === -1
+                ? `${code.slice(0, braceIndex + 1)}\n`
+                : code.slice(0, newlineIndex + 1);
+            return `${head}${insertion}\n${rest}`;
+        }
+
+        function insertBodyLines(course, code, lines) {
+            if (!lines.length) return code;
+            let updated = code;
+            if (course === 'Python') {
+                updated = insertAfterFirstLine(code, lines);
+            } else {
+                updated = insertAfterFirstBlockLine(code, lines);
+            }
+            if (updated === code) {
+                return `${code}\n${lines.join('\n')}`;
+            }
+            return updated;
+        }
+
+        function expandSnippet(course, code) {
+            if (!code) return code;
+            const base = String(code);
+            const baseLines = countLines(base);
+            if (baseLines >= MIN_SNIPPET_LINES && baseLines <= MAX_SNIPPET_LINES) {
+                return base;
+            }
+            if (baseLines > MAX_SNIPPET_LINES) {
+                return base;
+            }
+
+            const commentPrefix = commentPrefixFor(course);
+            const preambleLines = [
+                'Debug context',
+                'Trace the logic step by step'
+            ];
+
+            let bodyLines = [];
+            if (course === 'Python') {
+                bodyLines = [
+                    'trace_flag = True',
+                    'step_index = 0',
+                    '# debug note 1',
+                    '# debug note 2'
+                ];
+            } else if (course === 'JavaScript') {
+                bodyLines = [
+                    'const traceFlag = true;',
+                    'let stepIndex = 0;',
+                    '// debug note 1',
+                    '// debug note 2'
+                ];
+            } else if (course === 'TypeScript') {
+                bodyLines = [
+                    'const traceFlag: boolean = true;',
+                    'let stepIndex: number = 0;',
+                    '// debug note 1',
+                    '// debug note 2'
+                ];
+            } else if (course === 'Java') {
+                bodyLines = [
+                    'boolean traceFlag = true;',
+                    'int stepIndex = 0;',
+                    '// debug note 1',
+                    '// debug note 2'
+                ];
+            } else if (course === 'C++') {
+                bodyLines = [
+                    'bool traceFlag = true;',
+                    'int stepIndex = 0;',
+                    '// debug note 1',
+                    '// debug note 2'
+                ];
+            }
+
+            let projected = baseLines + preambleLines.length + bodyLines.length;
+            if (projected < MIN_SNIPPET_LINES) {
+                const needed = MIN_SNIPPET_LINES - projected;
+                if (course === 'SQL') {
+                    for (let i = 1; i <= needed; i += 1) {
+                        preambleLines.push(`debug note ${i}`);
+                    }
+                } else {
+                    for (let i = 1; i <= needed; i += 1) {
+                        bodyLines.push(`${commentPrefix}debug note ${i + 2}`);
+                    }
+                }
+            }
+
+            let updated = addPreamble(base, preambleLines, commentPrefix);
+            if (course === 'SQL') {
+                return updated;
+            }
+            if (bodyLines.length) {
+                updated = insertBodyLines(course, updated, bodyLines);
+            }
+            return updated;
+        }
+
+        Object.keys(debugCourses).forEach((course) => {
+            const courseData = debugCourses[course];
+            if (!courseData || !Array.isArray(courseData.tasks)) return;
+            courseData.tasks = courseData.tasks.map((task) => ({
+                ...task,
+                buggy: expandSnippet(course, task.buggy),
+                solution: expandSnippet(course, task.solution)
+            }));
+        });
+
+        const courseList = document.getElementById('courseList');
+        const taskList = document.getElementById('taskList');
+        const activeCourseEl = document.getElementById('activeCourse');
+        const taskTitleEl = document.getElementById('taskTitle');
+        const taskDescEl = document.getElementById('taskDesc');
+        const codeEditor = document.getElementById('codeEditor');
+        const feedbackList = document.getElementById('feedbackList');
+        const mistakesBlock = document.getElementById('mistakesBlock');
+        const mistakesList = document.getElementById('mistakesList');
+        const tipsBlock = document.getElementById('tipsBlock');
+        const tipsList = document.getElementById('tipsList');
+        const fixBlock = document.getElementById('fixBlock');
+        const correctedCode = document.getElementById('correctedCode');
+        const statusPill = document.getElementById('statusPill');
+        const resetBtn = document.getElementById('resetBtn');
+        const submitFixBtn = document.getElementById('submitFixBtn');
+
+        let activeCourse = null;
+        let activeTaskIndex = 0;
+        let buggySnapshot = '';
+        const DRAFT_PREFIX = 'debugDraft';
+
+        function normalize(code) {
+            return String(code || '')
+                .replace(/\r\n/g, '\n')
+                .replace(/[ \t]+$/gm, '')
+                .trim();
+        }
+
+        function setStatus(state, text) {
+            statusPill.classList.remove('good', 'bad', 'neutral');
+            statusPill.classList.add(state);
+            statusPill.textContent = text;
+        }
+
+        function draftKey(course, index) {
+            return `${DRAFT_PREFIX}:${course}:${index}`;
+        }
+
+        function loadDraft(course, index) {
+            return localStorage.getItem(draftKey(course, index)) || '';
+        }
+
+        function saveDraft(course, index, code) {
+            localStorage.setItem(draftKey(course, index), code);
+        }
+
+        function renderCourses() {
+            courseList.innerHTML = '';
+            Object.keys(debugCourses).forEach((course) => {
+                const btn = document.createElement('button');
+                btn.className = 'course-btn';
+                btn.textContent = course;
+                btn.onclick = () => selectCourse(course);
+                if (course === activeCourse) btn.classList.add('active');
+                courseList.appendChild(btn);
+            });
+        }
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+            const tasks = debugCourses[activeCourse].tasks;
+            tasks.forEach((task, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'task-btn';
+                btn.textContent = `${index + 1}. ${task.title}`;
+                btn.onclick = () => selectTask(index);
+                if (index === activeTaskIndex) btn.classList.add('active');
+                taskList.appendChild(btn);
+            });
+        }
+
+        function selectCourse(course) {
+            activeCourse = course;
+            activeTaskIndex = 0;
+            renderCourses();
+            renderTasks();
+            loadTask();
+        }
+
+        function selectTask(index) {
+            activeTaskIndex = index;
+            renderTasks();
+            loadTask();
+        }
+
+        function loadTask() {
+            const task = debugCourses[activeCourse].tasks[activeTaskIndex];
+            activeCourseEl.textContent = activeCourse;
+            taskTitleEl.textContent = task.title;
+            taskDescEl.textContent = task.description;
+            buggySnapshot = task.buggy;
+            const draft = loadDraft(activeCourse, activeTaskIndex);
+            codeEditor.value = draft || task.buggy;
+            feedbackList.innerHTML = draft
+                ? '<li>Loaded your saved draft. Continue debugging.</li>'
+                : '<li>Fix the code and submit to get feedback.</li>';
+            mistakesBlock.classList.add('hidden');
+            tipsBlock.classList.add('hidden');
+            fixBlock.classList.add('hidden');
+            setStatus('neutral', 'Not submitted');
+        }
+
+        function evaluateSubmission(task, code) {
+            const normalized = normalize(code);
+            const expected = normalize(task.solution);
+            if (normalized === expected) {
+                return { correct: true, messages: ['Looks perfect! Great debugging.'] };
+            }
+
+            const issues = [];
+            if (task.rules && task.rules.mustInclude) {
+                task.rules.mustInclude.forEach((rule) => {
+                    if (!rule.regex.test(code)) {
+                        issues.push(rule.message);
+                    }
+                });
+            }
+            if (task.rules && task.rules.mustNotInclude) {
+                task.rules.mustNotInclude.forEach((rule) => {
+                    if (rule.regex.test(code)) {
+                        issues.push(rule.message);
+                    }
+                });
+            }
+            if (!issues.length) {
+                issues.push('Your fix is close. Double-check the logic and syntax.');
+            }
+            return { correct: false, messages: issues };
+        }
+
+        function renderFeedback(result) {
+            feedbackList.innerHTML = '';
+            result.messages.forEach((msg) => {
+                const li = document.createElement('li');
+                li.textContent = msg;
+                li.className = result.correct ? 'good' : 'bad';
+                feedbackList.appendChild(li);
+            });
+
+            mistakesList.innerHTML = '';
+            if (Array.isArray(result.mistakes) && result.mistakes.length) {
+                result.mistakes.forEach((msg) => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    li.className = 'bad';
+                    mistakesList.appendChild(li);
+                });
+                mistakesBlock.classList.remove('hidden');
+            } else {
+                mistakesBlock.classList.add('hidden');
+            }
+
+            tipsList.innerHTML = '';
+            if (Array.isArray(result.tips) && result.tips.length) {
+                result.tips.forEach((msg) => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    tipsList.appendChild(li);
+                });
+                tipsBlock.classList.remove('hidden');
+            } else {
+                tipsBlock.classList.add('hidden');
+            }
+
+            if (result.corrected_code) {
+                correctedCode.textContent = result.corrected_code;
+                fixBlock.classList.remove('hidden');
+            } else {
+                fixBlock.classList.add('hidden');
+            }
+        }
+
+        async function submitFix() {
+            if (!activeCourse) return;
+            const task = debugCourses[activeCourse].tasks[activeTaskIndex];
+            const code = codeEditor.value;
+            setStatus('neutral', 'Reviewing...');
+            submitFixBtn.disabled = true;
+
+            let result = null;
+            try {
+                const response = await fetch(EVAL_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_email: activeEmail || 'guest',
+                        course: activeCourse,
+                        task_title: task.title,
+                        description: task.description,
+                        buggy_code: task.buggy,
+                        expected_solution: task.solution,
+                        submitted_code: code
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (response.ok && typeof data.correct === 'boolean') {
+                    result = {
+                        correct: data.correct,
+                        messages: Array.isArray(data.messages) && data.messages.length
+                            ? data.messages
+                            : ['AI review complete.'],
+                        mistakes: Array.isArray(data.mistakes) ? data.mistakes : [],
+                        tips: Array.isArray(data.tips) ? data.tips : [],
+                        corrected_code: data.corrected_code || ''
+                    };
+                }
+            } catch (error) {
+                result = null;
+            }
+
+            if (!result) {
+                result = evaluateSubmission(task, code);
+                result.mistakes = result.correct ? [] : result.messages.slice(0);
+                result.tips = [];
+                result.corrected_code = result.correct ? '' : (task.solution || '');
+                result.messages.unshift('AI offline, using local checks.');
+            }
+
+            renderFeedback(result);
+            setStatus(result.correct ? 'good' : 'bad', result.correct ? 'Correct' : 'Needs fixes');
+            submitFixBtn.disabled = false;
+        }
+
+        resetBtn.addEventListener('click', () => {
+            codeEditor.value = buggySnapshot;
+            saveDraft(activeCourse, activeTaskIndex, codeEditor.value);
+            feedbackList.innerHTML = '<li>Buggy code restored. Try again.</li>';
+            mistakesBlock.classList.add('hidden');
+            tipsBlock.classList.add('hidden');
+            fixBlock.classList.add('hidden');
+            setStatus('neutral', 'Not submitted');
+        });
+
+        codeEditor.addEventListener('input', () => {
+            if (!activeCourse) return;
+            saveDraft(activeCourse, activeTaskIndex, codeEditor.value);
+        });
+
+        submitFixBtn.addEventListener('click', submitFix);
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = 'index.html';
+        }
+
+        (function init() {
+            const preferred = localStorage.getItem('selectedCourse');
+            activeCourse = debugCourses[preferred] ? preferred : Object.keys(debugCourses)[0];
+            renderCourses();
+            renderTasks();
+            loadTask();
+        })();
+    </script>
+</body>
+</html>

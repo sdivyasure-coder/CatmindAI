@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Test - Smart AI Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        nav {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        nav h1 {
+            color: #667eea;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .test-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .test-timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        
+        .question {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .question-text {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f5f8ff;
+        }
+        
+        .option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn.success {
+            background: #27ae60;
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+        }
+        
+        .results {
+            text-align: center;
+        }
+        
+        .results h2 {
+            color: #27ae60;
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .results.failed h2 {
+            color: #e74c3c;
+        }
+        
+        .score-display {
+            font-size: 56px;
+            color: #667eea;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .completion-time {
+            font-size: 18px;
+            color: #666;
+            margin: 15px 0;
+        }
+        
+        .congratulations {
+            font-size: 24px;
+            margin: 30px 0;
+            color: #27ae60;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>🎓 Smart AI Learning - Final Test</h1>
+    </nav>
+
+    <div class="container">
+        <!-- Test Interface -->
+        <div id="testInterface">
+            <div class="card">
+                <h2 id="testTitle"></h2>
+                <div class="test-info" id="testInfo"></div>
+                <div class="test-timer">⏱️ Time: <span id="timer">10:00</span></div>
+                <div id="questionsContainer"></div>
+                <button class="btn success" onclick="submitFinalTest()">Submit Final Test 🎯</button>
+            </div>
+        </div>
+
+        <!-- Results Interface -->
+        <div id="resultsInterface" class="hidden">
+            <div class="card results" id="resultsCard">
+                <h2 id="resultsTitle"></h2>
+                <div class="score-display" id="scoreDisplay"></div>
+                <div class="completion-time" id="completionTime"></div>
+                <p id="resultsMessage"></p>
+                <button class="btn" id="nextActionBtn" onclick="returnToDashboard()"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const email = localStorage.getItem('email');
+        const language = new URLSearchParams(window.location.search).get('language') || 'Python';
+        const startTime = parseInt(localStorage.getItem('courseStartTime')) || Date.now();
+        
+        let finalTestAnswers = [];
+        let testTime = 600;
+        let passed = false;
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        async function initializeFinalTest() {
+            try {
+                const response = await fetch(`${API_URL}/final-test/${language}`);
+                const test = await response.json();
+                
+                document.getElementById('testTitle').textContent = 
+                    `🏆 Final ${language} Comprehensive Test`;
+                document.getElementById('testInfo').innerHTML = `
+                    <strong>This is the final comprehensive test covering all topics in ${language}.</strong><br>
+                    You need ${test.min_pass_percentage}% to pass and complete the course.
+                `;
+                
+                finalTestAnswers = new Array(test.questions.length).fill(-1);
+                testTime = test.time_limit;
+                
+                renderFinalTest(test);
+                startTimer();
+            } catch (error) {
+                console.error('Error loading final test:', error);
+            }
+        }
+
+        function renderFinalTest(test) {
+            // Only render if questions include options (no fake placeholders)
+            if (!test.questions || test.questions.length === 0) {
+                document.getElementById('questionsContainer').innerHTML = '<p>No questions available for this final test.</p>';
+                document.querySelector('.btn.success').disabled = true;
+                return;
+            }
+
+            const firstHasOptions = Array.isArray(test.questions[0].options) && test.questions[0].options.length > 0;
+            if (!firstHasOptions) {
+                document.getElementById('questionsContainer').innerHTML = `
+                    <div style="padding:20px; background:#fff; border-radius:8px;">
+                        <h3>Final test not available</h3>
+                        <p>The server does not provide fully-formed final test questions right now. Please try again later.</p>
+                    </div>
+                `;
+                document.querySelector('.btn.success').disabled = true;
+                return;
+            }
+
+            let html = '';
+            test.questions.forEach((q, index) => {
+                html += `
+                    <div class="question">
+                        <div class="question-text">Q${index + 1}: ${q.question}</div>
+                        <div class="options">
+                `;
+                q.options.forEach((opt, optIndex) => {
+                    html += `<div class="option" onclick="selectFinalAnswer(${index}, ${optIndex})">${String.fromCharCode(65 + optIndex)}) ${opt}</div>`;
+                });
+                html += `</div></div>`;
+            });
+            document.getElementById('questionsContainer').innerHTML = html;
+        }
+
+        function selectFinalAnswer(questionIndex, optionIndex) {
+            finalTestAnswers[questionIndex] = optionIndex;
+            document.querySelectorAll('.question')[questionIndex]
+                .querySelectorAll('.option')
+                .forEach((opt, idx) => {
+                    opt.classList.toggle('selected', idx === optionIndex);
+                });
+        }
+
+        let timerInterval;
+        function startTimer() {
+            let remaining = testTime;
+            timerInterval = setInterval(() => {
+                remaining--;
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                document.getElementById('timer').textContent = 
+                    `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    submitFinalTest();
+                }
+            }, 1000);
+        }
+
+        async function submitFinalTest() {
+            clearInterval(timerInterval);
+            // If the rendered test has options and was fetched from the server, compute score
+            const questions = document.querySelectorAll('.question');
+            if (questions.length === 0) {
+                alert('No final test questions available to submit.');
+                return;
+            }
+
+            // Attempt to calculate correct answers if server provided correct indices
+            let correct = 0;
+            try {
+                const response = await fetch(`${API_URL}/final-test/${language}`);
+                const test = await response.json();
+                if (test.questions && test.questions.length === finalTestAnswers.length) {
+                    for (let i = 0; i < test.questions.length; i++) {
+                        const q = test.questions[i];
+                        if (q.correct !== undefined && finalTestAnswers[i] === q.correct) correct++;
+                    }
+                }
+            } catch (e) {
+                console.log('Could not verify correct answers with API:', e);
+            }
+
+            // If we couldn't compute correct from server, fall back to counting any selected answers as incorrect (0)
+            const scorePercentage = (finalTestAnswers.filter(a => a >= 0).length > 0) ? (correct / Math.max(1, finalTestAnswers.length)) * 100 : 0;
+            passed = scorePercentage >= 75;
+
+            const completionTime = Date.now() - startTime;
+
+            // Try to save completion if API is available
+            try {
+                await fetch(
+                    `${API_URL}/language/complete?user_email=${email}&language=${language}`,
+                    { method: 'POST' }
+                );
+            } catch (error) {
+                console.log('API not available, using local data');
+            }
+
+            showFinalResults(scorePercentage, correct, completionTime);
+        }
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m ${seconds}s`;
+            }
+            return `${minutes}m ${seconds}s`;
+        }
+
+        function showFinalResults(scorePercentage, correct, completionTime) {
+            document.getElementById('testInterface').classList.add('hidden');
+            document.getElementById('resultsInterface').classList.remove('hidden');
+            
+            const card = document.getElementById('resultsCard');
+            card.classList.toggle('failed', !passed);
+            
+            if (passed) {
+                document.getElementById('resultsTitle').textContent = 
+                    '🎉 Course Completed Successfully!';
+                document.getElementById('scoreDisplay').textContent = `${scorePercentage.toFixed(1)}%`;
+                document.getElementById('resultsMessage').innerHTML = `
+                    <p>Congratulations! You have successfully completed the ${language} course.</p>
+                    <div class="congratulations">
+                        🏆 Your achievement has been recorded on the leaderboard!
+                    </div>
+                `;
+                document.getElementById('nextActionBtn').textContent = 'View Leaderboard 🏆';
+                document.getElementById('nextActionBtn').onclick = () => {
+                    localStorage.setItem('completedLanguage', language);
+                    window.location.href = 'leaderboard.html';
+                };
+            } else {
+                document.getElementById('resultsTitle').textContent = 
+                    '❌ Test Not Passed';
+                document.getElementById('resultsMessage').innerHTML = `
+                    <p>You scored ${scorePercentage.toFixed(1)}%. You need 75% to complete the course.</p>
+                    <p>The AI will analyze your weak areas and help you improve.</p>
+                `;
+                document.getElementById('nextActionBtn').textContent = 'Review & Retry 🔄';
+                document.getElementById('nextActionBtn').onclick = () => {
+                    window.location.href = 'learning.html';
+                };
+            }
+            
+            document.getElementById('completionTime').innerHTML = `
+                <strong>Time Spent:</strong> ${formatTime(completionTime)}<br>
+                <strong>Questions Correct:</strong> ${correct}/10
+            `;
+        }
+
+        function returnToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        initializeFinalTest();
+    </script>
+</body>
+</html>

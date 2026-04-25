@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn - Smart AI Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        nav {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        nav h1 {
+            color: #667eea;
+        }
+        
+        nav a {
+            color: #667eea;
+            margin: 0 15px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        
+        .sidebar h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .topic-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .topic-item:hover {
+            background: #e8e8e8;
+        }
+        
+        .topic-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .main {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .main p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .ai-hint {
+            background: #e3f2fd;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .ai-hint strong {
+            color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>🎓 Smart AI Learning</h1>
+        <div>
+            <a onclick="window.location.href='courses.html'">Back to Courses</a>
+            <a onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <div class="sidebar">
+                <h3 id="courseTitle">Topics</h3>
+                <div id="topicsList"></div>
+            </div>
+
+            <div class="main">
+                <h2 id="topicTitle">Welcome</h2>
+                <div id="content"></div>
+                <div style="margin-top: 30px;">
+                    <button class="btn" onclick="prevTopic()">← Previous</button>
+                    <button class="btn" onclick="nextTopic()">Next →</button>
+                    <button class="btn" onclick="window.location.href='tests.html'" style="background: #27ae60;">Take Quiz 🎯</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const course = localStorage.getItem('selectedCourse') || 'Python';
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        const topics = {
+            'Python': [
+                { name: 'Basics', content: 'Python is a high-level, interpreted programming language known for its simple syntax and readability.' },
+                { name: 'Variables & Data Types', content: 'Variables are containers for storing data. Python supports strings, integers, floats, booleans, and more without explicit type declaration.' },
+                { name: 'Lists & Arrays', content: 'Lists are ordered, mutable collections that can store multiple items. Use square brackets and learn indexing, slicing, and manipulation.' },
+                { name: 'Dictionaries', content: 'Dictionaries store data in key-value pairs. They are unordered and mutable, perfect for organizing related data.' },
+                { name: 'Conditional Statements', content: 'Use if, elif, and else statements to control program flow based on conditions and boolean logic.' },
+                { name: 'Loops', content: 'Loops allow code execution multiple times. Python supports for loops (iterating) and while loops (condition-based).' },
+                { name: 'Functions', content: 'Functions are reusable code blocks. Use def to define functions, pass parameters, and return values for modular programming.' },
+                { name: 'Exception Handling', content: 'Handle errors gracefully with try-except blocks. Learn about different exception types and custom error handling.' },
+                { name: 'Object-Oriented Programming', content: 'Master classes, objects, attributes, and methods. Learn encapsulation, inheritance, and polymorphism principles.' },
+                { name: 'File Handling', content: 'Read and write files using Python. Learn about file modes, context managers (with statement), and data persistence.' },
+                { name: 'String Operations', content: 'Work with strings using methods, formatting, and manipulation. Learn f-strings, slicing, and string methods.' },
+                { name: 'Decorators', content: 'Decorators modify function behavior without changing the function itself. Learn @ syntax and function wrapping.' },
+                { name: 'Generators & Iterators', content: 'Create efficient data sequences with generators. Learn yield, lazy evaluation, and memory optimization.' },
+                { name: 'Lambda Functions', content: 'Create anonymous functions with lambda. Use with map(), filter(), and sorted() for functional programming.' },
+                { name: 'Modules & Packages', content: 'Organize code into reusable modules. Learn imports, package structure, and external library usage.' }
+            ],
+            'Java': [
+                { name: 'Introduction', content: 'Java is a object-oriented, platform-independent language. Learn the Java Virtual Machine (JVM) concept and compilation process.' },
+                { name: 'Variables & Data Types', content: 'Java requires explicit type declaration. Explore primitive types (int, double, boolean) and reference types.' },
+                { name: 'Operators & Expressions', content: 'Learn arithmetic, logical, relational, and bitwise operators. Understand operator precedence and expression evaluation.' },
+                { name: 'Control Flow', content: 'Master if-else statements, switch cases, and ternary operators to control program logic.' },
+                { name: 'Loops', content: 'Use for loops (traditional and enhanced), while loops, and do-while loops for repetitive operations.' },
+                { name: 'Arrays', content: 'Declare and initialize arrays. Learn multidimensional arrays and array manipulation techniques.' },
+                { name: 'Strings', content: 'Work with String class, String concatenation, immutability, and useful String methods.' },
+                { name: 'Methods', content: 'Define methods with parameters and return types. Learn method overloading and variable scope.' },
+                { name: 'Classes & Objects', content: 'Create classes as blueprints for objects. Learn constructors, instance variables, and object creation.' },
+                { name: 'Encapsulation', content: 'Use access modifiers (public, private, protected) to control data access and promote information hiding.' },
+                { name: 'Inheritance', content: 'Create class hierarchies using extends keyword. Learn method overriding and super keyword usage.' },
+                { name: 'Polymorphism', content: 'Understand method overriding and interface implementation. Learn compile-time and runtime polymorphism.' },
+                { name: 'Interfaces & Abstract Classes', content: 'Define contracts for classes. Learn the difference between interfaces and abstract classes.' },
+                { name: 'Exception Handling', content: 'Use try-catch-finally blocks. Learn exception types, custom exceptions, and proper error handling.' },
+                { name: 'Collections Framework', content: 'Work with List, Set, Map, and Queue interfaces. Learn ArrayList, HashMap, HashSet, and other implementations.' }
+            ],
+            'JavaScript': [
+                { name: 'Basics', content: 'JavaScript is a dynamic, interpreted language for web development. Learn syntax, variables (var, let, const), and basic operations.' },
+                { name: 'Data Types', content: 'Work with strings, numbers, booleans, objects, arrays, null, and undefined. Understand type coercion and typeof operator.' },
+                { name: 'Operators', content: 'Master arithmetic, logical, comparison, assignment, and special operators. Learn operator precedence.' },
+                { name: 'Control Structures', content: 'Use if-else, switch statements, ternary operators, and nullish coalescing for conditional logic.' },
+                { name: 'Loops', content: 'Iterate with for, while, do-while loops. Learn for-in and for-of loops for traversing objects and arrays.' },
+                { name: 'Functions', content: 'Define functions using function declarations, expressions, and arrow functions. Learn parameters, return values, and scope.' },
+                { name: 'Arrays', content: 'Create and manipulate arrays with methods like push, pop, map, filter, reduce, and forEach.' },
+                { name: 'Objects', content: 'Work with key-value pairs, object literals, and property access. Learn destructuring and object methods.' },
+                { name: 'Closures', content: 'Understand variable scope and closures. Learn how inner functions access outer function variables.' },
+                { name: 'Callbacks', content: 'Pass functions as arguments for event handling and asynchronous operations. Learn callback functions and their limitations.' },
+                { name: 'Promises', content: 'Handle asynchronous operations with Promises. Learn .then(), .catch(), and .finally() methods.' },
+                { name: 'Async/Await', content: 'Write cleaner asynchronous code with async/await syntax. Learn error handling with try-catch.' },
+                { name: 'DOM Manipulation', content: 'Select and modify HTML elements. Learn querySelector, getElementById, and element property changes.' },
+                { name: 'Events', content: 'Respond to user interactions (click, submit, input). Learn event listeners and event delegation.' },
+                { name: 'ES6+ Features', content: 'Explore arrow functions, template literals, destructuring, spread operator, and class syntax.' },
+                { name: 'Regular Expressions', content: 'Match and manipulate text patterns using regex. Learn regex syntax and string methods with regex.' },
+                { name: 'JSON', content: 'Work with JSON format for data exchange. Learn JSON.parse() and JSON.stringify() methods.' }
+            ],
+            'C++': [
+                { name: 'Basics', content: 'C++ is a powerful, compiled language combining procedural and object-oriented programming. Learn compilation and basic syntax.' },
+                { name: 'Variables & Data Types', content: 'Declare variables with specific types (int, float, char, bool). Learn type casting and type conversions.' },
+                { name: 'Input/Output', content: 'Use cin for input and cout for output. Learn stream operations and formatted output.' },
+                { name: 'Operators', content: 'Work with arithmetic, logical, relational, and bitwise operators. Understand operator overloading.' },
+                { name: 'Control Flow', content: 'Master if-else, switch cases, and ternary operators for decision making.' },
+                { name: 'Loops', content: 'Use for loops, while loops, and do-while loops. Learn loop control with break and continue.' },
+                { name: 'Arrays', content: 'Create single and multidimensional arrays. Learn array indexing and iteration.' },
+                { name: 'Strings', content: 'Work with C-style and C++ std::string. Learn string operations and manipulation.' },
+                { name: 'Functions', content: 'Define and call functions with parameters and return types. Learn function overloading and default parameters.' },
+                { name: 'Pointers', content: 'Understand memory addresses and pointer variables. Learn dereferencing and pointer arithmetic.' },
+                { name: 'References', content: 'Learn references as safer alternatives to pointers. Understand reference parameters and return references.' },
+                { name: 'Dynamic Memory', content: 'Allocate memory with new and deallocate with delete. Learn memory leaks and proper management.' },
+                { name: 'Classes & Objects', content: 'Define classes with members and methods. Learn constructors, destructors, and object creation.' },
+                { name: 'Encapsulation', content: 'Use public, private, and protected access specifiers. Learn getters and setters for data protection.' },
+                { name: 'Inheritance', content: 'Create class hierarchies. Learn single and multiple inheritance with virtual functions.' },
+                { name: 'Polymorphism', content: 'Understand virtual functions and abstract classes. Learn method overriding and dynamic dispatch.' }
+            ],
+            'Go': [
+                { name: 'Introduction', content: 'Go is a modern, compiled language designed for concurrency and simplicity. Learn syntax and compilation process.' },
+                { name: 'Variables & Types', content: 'Declare variables with explicit or inferred types. Learn built-in types and custom type definitions.' },
+                { name: 'Control Structures', content: 'Use if, switch, and for statements. Go simplifies control flow with minimal keywords.' },
+                { name: 'Functions', content: 'Define functions with named return values. Learn multiple return values and variadic functions.' },
+                { name: 'Packages & Imports', content: 'Organize code into packages. Learn package structure and importing other packages.' },
+                { name: 'Slices & Arrays', content: 'Work with arrays and slices (dynamic arrays). Learn slice operations and built-in functions.' },
+                { name: 'Maps', content: 'Use maps for key-value storage. Learn map creation, access, and iteration.' },
+                { name: 'Interfaces', content: 'Define interfaces for polymorphism. Learn implicit interface implementation.' },
+                { name: 'Pointers', content: 'Use pointers for efficient memory sharing. Learn pointer syntax and operations.' },
+                { name: 'Goroutines', content: 'Create lightweight concurrent functions with goroutines. Learn concurrency patterns.' }
+            ],
+            'Rust': [
+                { name: 'Introduction', content: 'Rust is a systems programming language with memory safety. Learn ownership and the borrow checker.' },
+                { name: 'Variables & Mutability', content: 'Declare variables with let and mut keywords. Learn shadowing and variable scope.' },
+                { name: 'Data Types', content: 'Work with scalar and compound types. Learn integers, floats, booleans, and tuples.' },
+                { name: 'Functions', content: 'Define functions with parameters and return types. Understand expressions and statements.' },
+                { name: 'Ownership', content: 'Master Rust\'s unique ownership system. Learn move semantics and transfer of ownership.' },
+                { name: 'Borrowing & References', content: 'Use references for temporary access. Learn mutable and immutable references.' },
+                { name: 'Slices', content: 'Work with string slices and array slices. Understand how slices prevent invalid data access.' },
+                { name: 'Structs', content: 'Define custom data types with structs. Learn struct instantiation and field access.' },
+                { name: 'Enums', content: 'Create enumerations for type-safe alternatives. Learn pattern matching with enums.' },
+                { name: 'Error Handling', content: 'Use Result and Option types for error handling. Learn unwrap and ? operator.' }
+            ],
+            'SQL': [
+                { name: 'Introduction', content: 'SQL is a language for managing relational databases. Learn databases, tables, and basic concepts.' },
+                { name: 'SELECT Queries', content: 'Retrieve data from tables. Learn WHERE, ORDER BY, and filtering conditions.' },
+                { name: 'JOIN Operations', content: 'Combine data from multiple tables using INNER, LEFT, RIGHT, and FULL JOINs.' },
+                { name: 'Aggregation', content: 'Use COUNT, SUM, AVG, MIN, MAX functions. Learn GROUP BY and HAVING clauses.' },
+                { name: 'INSERT & UPDATE', content: 'Add and modify data in tables. Learn INSERT, UPDATE, and DELETE statements.' },
+                { name: 'Data Types', content: 'Learn column data types: VARCHAR, INT, DATE, DECIMAL, and BOOLEAN.' },
+                { name: 'CREATE & ALTER', content: 'Define table structures with CREATE TABLE. Learn ALTER TABLE for modifications.' },
+                { name: 'Constraints', content: 'Apply PRIMARY KEY, FOREIGN KEY, UNIQUE, and CHECK constraints for data integrity.' },
+                { name: 'Indexes', content: 'Create indexes for faster queries. Learn index usage and best practices.' },
+                { name: 'Stored Procedures', content: 'Write reusable SQL programs with stored procedures and functions.' }
+            ],
+            'TypeScript': [
+                { name: 'Introduction', content: 'TypeScript adds static typing to JavaScript. Learn compilation and type system benefits.' },
+                { name: 'Basic Types', content: 'Work with string, number, boolean, any, void, null, and undefined types.' },
+                { name: 'Interfaces', content: 'Define object structure contracts with interfaces. Learn optional and read-only properties.' },
+                { name: 'Classes', content: 'Create classes with TypeScript. Learn constructors, access modifiers, and inheritance.' },
+                { name: 'Enums', content: 'Define enumerations for named constants and string-based enums.' },
+                { name: 'Generics', content: 'Write reusable code with generic types. Learn generic functions and classes.' },
+                { name: 'Union Types', content: 'Combine multiple types with unions. Learn discriminated unions and type guards.' },
+                { name: 'Modules', content: 'Organize code with import and export. Learn module resolution and namespaces.' },
+                { name: 'Decorators', content: 'Add metadata and behavior modification with decorators.' },
+                { name: 'Advanced Types', content: 'Explore utility types, conditional types, and mapped types for advanced typing.' }
+            ]
+        };
+
+        const courseTopics = topics[course] || topics['Python'];
+        
+        // Load the last topic the user was on, or start from 0
+        let currentTopic = parseInt(localStorage.getItem(`lastTopic_${course}`) || '0');
+
+        function loadTopics() {
+            document.getElementById('courseTitle').textContent = course;
+            const topicsList = document.getElementById('topicsList');
+            topicsList.innerHTML = '';
+            
+            courseTopics.forEach((topic, index) => {
+                const item = document.createElement('div');
+                item.className = 'topic-item' + (index === currentTopic ? ' active' : '');
+                item.textContent = topic.name;
+                item.onclick = () => selectTopic(index);
+                topicsList.appendChild(item);
+            });
+            
+            displayTopic(currentTopic);
+        }
+
+        function selectTopic(index) {
+            currentTopic = index;
+            // Save the current topic to localStorage so it persists
+            localStorage.setItem(`lastTopic_${course}`, currentTopic);
+            document.querySelectorAll('.topic-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+            displayTopic(index);
+        }
+
+        function displayTopic(index) {
+            const topic = courseTopics[index];
+            document.getElementById('topicTitle').textContent = topic.name;
+            document.getElementById('content').innerHTML = `
+                <p>${topic.content}</p>
+                <div class="ai-hint">
+                    <strong>💡 AI Tip:</strong> Try to understand the core concepts first, then practice with real-world examples.
+                </div>
+                <div class="code-block">
+# Example code for ${topic.name}
+print("Learning ${topic.name} in ${course}")
+                </div>
+            `;
+        }
+
+        function nextTopic() {
+            if (currentTopic < courseTopics.length - 1) {
+                selectTopic(currentTopic + 1);
+            } else {
+                alert('You have completed all topics! Ready for the quiz?');
+            }
+        }
+
+        function prevTopic() {
+            if (currentTopic > 0) {
+                selectTopic(currentTopic - 1);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = 'index.html';
+        }
+
+        loadTopics();
+    </script>
+</body>
+</html>

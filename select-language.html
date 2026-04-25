@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Language - Smart AI Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 50px 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        
+        .user-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .languages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .language-card {
+            padding: 30px;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .language-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        .language-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .language-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .language-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .language-description {
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .language-card.selected .language-description {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 14px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-width: 200px;
+        }
+        
+        .btn-start:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-start:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-logout {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: #7f8c8d;
+        }
+        
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 15px;
+            background: #fadbd8;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Choose Your Programming Language</h1>
+        <p class="subtitle">Select a language to start your AI-guided learning journey</p>
+        
+        <div class="user-info">
+            👤 Welcome, <span id="userEmail"></span>!
+        </div>
+        
+        <div class="error" id="errorMsg"></div>
+        
+        <div class="languages-grid" id="languagesContainer">
+            <div class="loading">Loading languages...</div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-start" id="startBtn" onclick="startLearning()" disabled>
+                Start Learning 🚀
+            </button>
+            <button class="btn-logout" onclick="logout()">
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const email = localStorage.getItem('email');
+        
+        let selectedLanguage = null;
+        let languages = [];
+
+        if (!token || !email) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('userEmail').textContent = email;
+
+        async function loadLanguages() {
+            try {
+                const response = await fetch(`${API_URL}/languages`);
+                const data = await response.json();
+                
+                languages = data.details || [
+                    { name: "Python", topics_count: 4, min_pass: 70 },
+                    { name: "Java", topics_count: 3, min_pass: 70 },
+                    { name: "JavaScript", topics_count: 3, min_pass: 70 }
+                ];
+                
+                renderLanguages();
+            } catch (error) {
+                console.error('Error loading languages:', error);
+                const container = document.getElementById('languagesContainer');
+                container.innerHTML = '<div class="error" style="display: block; grid-column: 1/-1;">Failed to load languages. Please check if API is running on port 8000.</div>';
+            }
+        }
+
+        function renderLanguages() {
+            const container = document.getElementById('languagesContainer');
+            container.innerHTML = '';
+            
+            languages.forEach(lang => {
+                const card = document.createElement('div');
+                card.className = 'language-card';
+                card.onclick = () => selectLanguage(lang.name, card);
+                
+                const icons = {
+                    'Python': '🐍',
+                    'Java': '☕',
+                    'JavaScript': '✨',
+                    'C++': '⚙️'
+                };
+                
+                card.innerHTML = `
+                    <div class="language-icon">${icons[lang.name] || '💻'}</div>
+                    <div class="language-name">${lang.name}</div>
+                    <div class="language-description">${lang.topics_count} Topics • ${lang.min_pass}% to Pass</div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function selectLanguage(language, cardElement) {
+            selectedLanguage = language;
+            
+            // Remove selected class from all cards
+            document.querySelectorAll('.language-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            cardElement.classList.add('selected');
+            
+            // Enable start button
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        async function startLearning() {
+            if (!selectedLanguage) {
+                showError('Please select a language first');
+                return;
+            }
+            if (String(selectedLanguage).includes('${')) {
+                showError('Invalid course name. Please refresh and try again.');
+                return;
+            }
+            
+            try {
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('startBtn').textContent = 'Starting...';
+                
+                const response = await fetch(
+                    `${API_URL}/language/select?user_email=${email}&language=${selectedLanguage}`,
+                    { method: 'POST' }
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Failed to select language');
+                }
+                
+                const data = await response.json();
+                
+                // Store data for learning page
+                localStorage.setItem('selectedCourse', selectedLanguage);
+                localStorage.setItem('courseStartTime', new Date().getTime());
+                localStorage.setItem('currentTopic', '1');
+                
+                // Navigate to learning page
+                window.location.href = 'learning.html';
+            } catch (error) {
+                console.error('Error starting learning:', error);
+                showError('Error starting course: ' + error.message);
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('startBtn').textContent = 'Start Learning 🚀';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            localStorage.removeItem('selectedCourse');
+            localStorage.removeItem('courseStartTime');
+            window.location.href = 'index.html';
+        }
+
+        // Load languages on page load
+        loadLanguages();
+    </script>
+</body>
+</html>

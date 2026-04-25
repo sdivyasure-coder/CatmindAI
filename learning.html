@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AI Tutor - Learning</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
+        :root{
+            --bg:#0b111b;
+            --panel:#111a27;
+            --muted:#9aa4b2;
+            --accent:#6ee7b7;
+            --card:#0f1826;
+            --line:rgba(255,255,255,0.06);
+            --glow:rgba(110,231,183,0.18);
+        }
+        body{
+            font-family: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(1200px 600px at 20% -10%, #1a2a3f 0%, transparent 60%),
+                radial-gradient(1000px 500px at 100% 0%, #162238 0%, transparent 60%),
+                linear-gradient(180deg, #0a101a 0%, #0b111b 100%);
+            color:#e6eef6;
+            margin:0;
+        }
+        .app{
+            display:grid;
+            grid-template-columns: 0.9fr 1.8fr 1.1fr;
+            gap:16px;
+            padding:18px;
+            height:100vh;
+            box-sizing:border-box;
+        }
+        .panel{
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:12px;
+            padding:14px;
+            display:flex;
+            flex-direction:column;
+            min-height:0;
+            overflow:hidden;
+            box-shadow:0 8px 24px rgba(0,0,0,0.25);
+        }
+        .header{display:flex;justify-content:space-between;align-items:center}
+        .header-left{
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+        .user-badge{
+            margin:8px 0 10px;
+            padding:8px 10px;
+            border-radius:8px;
+            border:1px solid var(--line);
+            background:rgba(255,255,255,0.03);
+            color:var(--muted);
+            font-size:12px;
+        }
+        .badge{background:rgba(255,255,255,0.04);padding:6px 10px;border-radius:8px;color:var(--accent)}
+        .topics{background:rgba(255,255,255,0.03);padding:10px;border-radius:10px;overflow:auto;flex:1}
+        .topic{padding:8px;border-radius:8px;margin-bottom:6px;cursor:pointer;border:1px solid transparent}
+        .topic.locked{opacity:0.45;cursor:not-allowed}
+        .topic.active{background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08)}
+        .subhead{font-size:12px;color:var(--muted);margin-top:6px}
+        .chat{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;overflow:auto;flex:1}
+        .msg{margin-bottom:10px;line-height:1.45;display:flex}
+        .msg.ai{color:#cfeff0;justify-content:flex-start}
+        .msg.user{color:#d6e2ff;justify-content:flex-end}
+        .msg.system{color:#9fb3c8;justify-content:center}
+        .bubble{
+            max-width:88%;
+            padding:10px 12px;
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,0.06);
+            background:rgba(255,255,255,0.03);
+            box-shadow:0 6px 18px rgba(0,0,0,0.18);
+        }
+        .msg.system .bubble{
+            background:rgba(110,231,183,0.08);
+            border-style:dashed;
+            color:#bfe9d6;
+        }
+        .divider{
+            text-align:center;
+            color:var(--muted);
+            font-size:12px;
+            margin:8px 0;
+        }
+        .msg.user .bubble{
+            background:linear-gradient(135deg, rgba(56,189,248,0.2), rgba(110,231,183,0.18));
+            border-color:rgba(110,231,183,0.28);
+        }
+        .bubble h4{margin:0 0 6px 0;font-size:14px;color:#e6eef6}
+        .bubble p{margin:0 0 8px 0;color:#d6e2ff}
+        .bubble ul{margin:0 0 8px 18px;padding:0}
+        .bubble li{margin:2px 0}
+        .bubble .tagline{font-size:12px;color:var(--muted)}
+        .bubble pre{
+            background:#0a1320;
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:8px;
+            padding:10px;
+            overflow:auto;
+            margin:8px 0 10px;
+        }
+        .bubble code{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size:12px;
+            color:#d6e2ff;
+            white-space:pre;
+        }
+        .skeleton{
+            display:block;
+            height:10px;
+            border-radius:8px;
+            background:linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.14) 37%, rgba(255,255,255,0.06) 63%);
+            background-size:400% 100%;
+            animation:sheen 1.4s ease infinite;
+            margin:8px 0;
+        }
+        .skeleton.h1{height:16px;width:55%}
+        .skeleton.h2{height:12px;width:35%}
+        .skeleton.line{height:10px;width:100%}
+        .skeleton.line.short{width:70%}
+        .skeleton.line.tiny{width:40%}
+        @keyframes sheen{
+            0%{background-position:100% 0}
+            100%{background-position:0 0}
+        }
+        .controls{display:flex;gap:8px;justify-content:flex-end}
+        .btn{
+            background:var(--card);
+            border:1px solid rgba(255,255,255,0.08);
+            padding:8px 12px;
+            border-radius:8px;
+            color:inherit;
+            cursor:pointer;
+        }
+        .back-btn{
+            font-weight:600;
+        }
+        .btn:disabled{
+            opacity:0.5;
+            cursor:not-allowed;
+        }
+        .btn.primary{border-color:var(--glow);box-shadow:0 0 0 2px rgba(110,231,183,0.08)}
+        .input-row{display:flex;gap:8px;margin-top:10px}
+        .input-row input{
+            flex:1;
+            background:var(--card);
+            border:1px solid var(--line);
+            color:inherit;
+            padding:10px 12px;
+            border-radius:8px;
+            outline:none;
+        }
+        .input-row .btn{white-space:nowrap}
+        .sidebar-panel{
+            background:rgba(255,255,255,0.02);
+            border:1px solid var(--line);
+            border-radius:12px;
+            padding:12px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            margin-bottom:12px;
+        }
+        .chat-list{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            overflow:auto;
+            max-height:260px;
+        }
+        .chat-item{
+            padding:8px 10px;
+            border-radius:8px;
+            border:1px solid transparent;
+            cursor:pointer;
+            background:rgba(255,255,255,0.02);
+            font-size:13px;
+        }
+        .chat-item.active{
+            border-color:rgba(110,231,183,0.35);
+            background:rgba(110,231,183,0.08);
+            color:#dff8ee;
+        }
+        .chat-meta{
+            font-size:11px;
+            color:var(--muted);
+            margin-top:2px;
+        }
+        .mode-toggle{
+            display:flex;
+            gap:6px;
+            align-items:center;
+        }
+        .toggle-btn{
+            padding:6px 10px;
+            border-radius:999px;
+            border:1px solid var(--line);
+            cursor:pointer;
+            font-size:12px;
+            color:var(--muted);
+            background:rgba(255,255,255,0.02);
+        }
+        .toggle-btn.active{
+            color:#dff8ee;
+            border-color:rgba(110,231,183,0.4);
+            background:rgba(110,231,183,0.12);
+        }
+        .attachment-input{
+            display:none;
+        }
+        .test-panel{
+            background:rgba(255,255,255,0.02);
+            padding:12px;
+            border-radius:10px;
+            display:flex;
+            flex-direction:column;
+            flex:1;
+            min-height:0;
+            overflow:hidden;
+        }
+        #testContent{
+            flex:1;
+            min-height:0;
+            overflow:auto;
+            padding-right:4px;
+        }
+        .hidden{display:none}
+        .question{margin-bottom:10px}
+        .option{display:block;margin:6px 0;word-break:break-word}
+        .footer{font-size:12px;color:var(--muted);text-align:center}
+        .report-card{background:rgba(255,255,255,0.03);padding:12px;border-radius:10px;border:1px solid var(--line)}
+        .panel-body{display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
+        .panel-section{flex:1 1 0;min-height:0;overflow:auto}
+        .panel-section + .panel-section{margin-top:10px}
+        .section-title{font-size:13px;color:var(--muted);margin:6px 0 8px}
+        .course-list{display:flex;flex-direction:column;gap:6px}
+        .course-item{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,0.02);font-size:13px;display:flex;justify-content:space-between;align-items:center}
+        .course-item span{color:var(--muted);font-size:11px}
+        .course-item.current{border-color:rgba(110,231,183,0.35);background:rgba(110,231,183,0.08)}
+        .course-item.done{border-color:rgba(56,189,248,0.35);background:rgba(56,189,248,0.08)}
+        .progress{height:10px;background:#0a1320;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+        .progress > span{display:block;height:100%;background:linear-gradient(90deg,#6ee7b7,#38bdf8)}
+        .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(110,231,183,0.12);color:#b9f1da;font-size:12px}
+        .report-hero{
+            position:relative;
+            border-radius:14px;
+            padding:14px;
+            border:1px solid rgba(255,255,255,0.08);
+            background:
+                radial-gradient(300px 120px at 20% 0%, rgba(56,189,248,0.2), transparent 60%),
+                radial-gradient(240px 140px at 90% 30%, rgba(110,231,183,0.2), transparent 60%),
+                linear-gradient(180deg, rgba(15,24,38,0.9), rgba(11,17,27,0.9));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .report-hero::after{
+            content:"";
+            position:absolute;
+            inset:10px;
+            border-radius:12px;
+            border:1px dashed rgba(255,255,255,0.08);
+            pointer-events:none;
+        }
+        .ring{
+            width:84px;
+            height:84px;
+            border-radius:50%;
+            background:conic-gradient(#6ee7b7 0deg, #38bdf8 0deg, rgba(255,255,255,0.08) 0deg);
+            display:grid;
+            place-items:center;
+            border:1px solid rgba(255,255,255,0.1);
+        }
+        .ring span{
+            width:64px;
+            height:64px;
+            border-radius:50%;
+            background:#0b111b;
+            display:grid;
+            place-items:center;
+            font-size:14px;
+        }
+        .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+        .mini-card{
+            background:rgba(255,255,255,0.03);
+            border:1px solid var(--line);
+            border-radius:10px;
+            padding:10px;
+            font-size:12px;
+            color:var(--muted);
+        }
+        @media (max-width: 1100px){
+            .app{grid-template-columns:1fr; height:auto}
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="panel">
+        <div class="header">
+            <div class="header-left">
+                <button class="btn back-btn" onclick="goBack('courses.html')">← Back</button>
+                <div>
+                    <strong id="appTitle">Chat History</strong>
+                    <div id="headerStatus" style="font-size:12px;color:var(--muted)"></div>
+                </div>
+            </div>
+            <div class="badge" id="courseBadge">Python</div>
+        </div>
+        <div class="user-badge" id="activeUserBadge">Logged in as: --</div>
+        <div class="sidebar-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <strong style="font-size:13px" id="chatListTitle">Conversations</strong>
+                <button class="btn" id="newChatBtn">New Chat</button>
+            </div>
+            <div class="chat-list" id="chatList"></div>
+            <div>
+                <div class="subhead" style="margin-bottom:6px">Mode</div>
+                <div class="mode-toggle">
+                    <button class="toggle-btn active" id="modeCourse">Course</button>
+                    <button class="toggle-btn" id="modeGeneral">General</button>
+                </div>
+            </div>
+        </div>
+        <div class="hidden">
+            <div class="subhead">Syllabus</div>
+            <div class="topics" id="topicsList"></div>
+            <div class="controls">
+                <button class="btn" id="btnPrev">Prev</button>
+                <button class="btn" id="btnNext">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="header">
+            <div>
+                <strong>Learning Assistant</strong>
+                <div class="subhead" id="chatStatus">Ask doubts while you learn</div>
+            </div>
+            <span class="tag" id="modeTag">Chat Mode</span>
+        </div>
+        <div class="chat" id="chatArea"></div>
+        <div class="input-row" id="chatInputRow">
+            <input id="chatInput" type="text" placeholder="Type a question or say: I understand" />
+            <input type="file" id="attachFile" class="attachment-input" accept=".txt,.md,.py,.js,.ts,.java,.go,.rs,.cpp,.c,.json,.html,.css" />
+            <button class="btn" id="attachBtn">Attach</button>
+            <button class="btn primary" id="sendBtn">Send</button>
+        </div>
+        <div class="test-panel hidden" id="testPanel">
+            <h3 id="testTitle">Test Module</h3>
+            <div id="testContent"></div>
+            <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+                <button class="btn primary" id="submitTest">Submit</button>
+                <button class="btn" id="closeTest">Close</button>
+            </div>
+            <div class="footer">Topics lock during quiz. 70% required to pass.</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="header">
+            <div>
+                <strong>Profile Report</strong>
+                <div class="subhead">Progress and test results</div>
+            </div>
+            <span class="tag" id="progressTag">0% Complete</span>
+        </div>
+        <div class="panel-body">
+        <div class="panel-section">
+            <div class="section-title">Analytics</div>
+            <div class="report-hero">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                    <div>
+                        <div style="font-size:14px">Overall Progress</div>
+                        <div class="subhead" id="progressLabel">0 / 0 topics</div>
+                    </div>
+                    <div class="ring" id="progressRing"><span id="progressRingLabel">0%</span></div>
+                </div>
+                <div class="progress" style="margin-top:10px">
+                    <span id="progressBar" style="width:0%"></span>
+                </div>
+                <div class="stat-grid">
+                    <div class="mini-card">
+                        <div>Learning Streak</div>
+                        <div style="color:#e6eef6;margin-top:4px" id="streakDays">0 days</div>
+                    </div>
+                    <div class="mini-card">
+                        <div>Focus Level</div>
+                        <div style="color:#e6eef6;margin-top:4px" id="focusLevel">Steady</div>
+                    </div>
+                </div>
+            </div>
+            <div class="report-card" style="margin-top:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>Last Score</div>
+                    <div id="lastScore">Not attempted</div>
+                </div>
+                <div class="subhead" id="attempts">Attempts: 0</div>
+            </div>
+            <div class="report-card" style="margin-top:10px">
+                <div>Milestones</div>
+                <div class="subhead" id="milestones">Start the first quiz to unlock milestones.</div>
+            </div>
+            <div class="report-card" style="margin-top:10px">
+                <div>Completed Topics</div>
+                <div class="subhead" id="completedList">None yet</div>
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="section-title">Course</div>
+            <div class="report-card">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>Current Course</div>
+                    <div id="courseName">Python</div>
+                </div>
+                <div class="subhead" id="courseStatus">Ready to start</div>
+            </div>
+            <div class="report-card" style="margin-top:10px">
+                <div>Current Topic</div>
+                <div class="subhead" id="currentTopicDisplay">Not started</div>
+            </div>
+            <div class="report-card" style="margin-top:10px">
+                <div>Next Topic</div>
+                <div class="subhead" id="nextTopicDisplay">Not started</div>
+            </div>
+            <div class="report-card" style="margin-top:10px">
+                <div>Ask About This Topic</div>
+                <div class="subhead" style="margin-top:6px">Ask a doubt related to the current topic</div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                    <input id="courseQuestionInput" type="text" placeholder="Type your doubt..." style="flex:1;background:var(--card);border:1px solid var(--line);color:inherit;padding:8px 10px;border-radius:8px;outline:none;" />
+                    <button class="btn primary" id="courseQuestionBtn">Ask</button>
+                </div>
+            </div>
+            <div class="report-card" style="margin-top:10px">
+                <div>Available Topics</div>
+                <div class="subhead" style="margin-top:6px">Current course syllabus</div>
+                <div class="course-list" id="topicsListPanel">
+                    <div class="course-item">No topics yet <span></span></div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Minimal safe tutor page
+let API_URL = localStorage.getItem('apiUrl') || 'http://localhost:8000';
+const USE_STREAMING = window.location.protocol !== 'file:';
+let aiOnline = true;
+function sanitizeLanguageName(value){
+    if(!value) return null;
+    const v = String(value).trim();
+    if(!v) return null;
+    const bad = ['${','}','lang.name','undefined','null'];
+    if(bad.some(b => v.includes(b))) return null;
+    return v;
+}
+
+function goBack(fallback){
+    if(window.history.length > 1){
+        window.history.back();
+    } else {
+        window.location.href = fallback;
+    }
+}
+
+const urlLanguage = new URLSearchParams(window.location.search).get('language');
+let language = sanitizeLanguageName(urlLanguage) || sanitizeLanguageName(localStorage.getItem('selectedCourse')) || 'Python';
+localStorage.setItem('selectedCourse', language);
+let topics = [];
+let currentTopic = -1;
+let completedTopics = [];
+let topicLockedDuringQuiz = false;
+let quizState = { questions: [], answers: [] };
+let lastScore = null;
+let attempts = 0;
+const lessonCache = {};
+let learningStarted = false;
+let chatSessions = [];
+let activeChatId = null;
+let chatMode = 'course';
+let userKey = 'guest';
+
+function getUserKey(){
+    const email = localStorage.getItem('email');
+    return email ? email.replace(/[^a-z0-9]/gi,'_').toLowerCase() : 'guest';
+}
+
+function setActiveUserBadge(){
+    const badge = document.getElementById('activeUserBadge');
+    if(!badge) return;
+    const email = String(localStorage.getItem('email') || '').trim().toLowerCase();
+    badge.textContent = `Logged in as: ${email || 'guest'}`;
+}
+
+function getChatSessionsKey(mode){
+    return `chatSessions_${userKey}_${language}_${mode}`;
+}
+function getChatHistoryKey(chatId, mode){
+    return `chatHistory_${userKey}_${language}_${mode}_${chatId}`;
+}
+function getChatPrefsKey(mode){
+    return `chatPrefs_${userKey}_${language}_${mode}`;
+}
+function getChatModeKey(){
+    return `chatMode_${userKey}_${language}`;
+}
+
+function getProgressKey(base){
+    return `${base}_${userKey}_${language}`;
+}
+
+function loadChatSessions(mode){
+    const useMode = mode || chatMode;
+    const raw = localStorage.getItem(getChatSessionsKey(useMode));
+    chatSessions = raw ? JSON.parse(raw) : [];
+    const prefsRaw = localStorage.getItem(getChatPrefsKey(useMode));
+    if(prefsRaw){
+        try{
+            const prefs = JSON.parse(prefsRaw);
+            activeChatId = prefs.activeChatId || activeChatId;
+        } catch {}
+    }
+    if(!chatSessions.length){
+        const first = createNewChat('Welcome');
+        activeChatId = first.id;
+    }
+    if(!activeChatId && chatSessions[0]){
+        activeChatId = chatSessions[0].id;
+    }
+    saveChatPrefs();
+}
+
+function saveChatSessions(){
+    localStorage.setItem(getChatSessionsKey(chatMode), JSON.stringify(chatSessions));
+}
+
+function saveChatPrefs(){
+    localStorage.setItem(getChatPrefsKey(chatMode), JSON.stringify({ activeChatId }));
+}
+
+function setChatMode(mode){
+    chatMode = mode === 'general' ? 'general' : 'course';
+    const courseBtn = document.getElementById('modeCourse');
+    const generalBtn = document.getElementById('modeGeneral');
+    if(courseBtn && generalBtn){
+        courseBtn.classList.toggle('active', chatMode === 'course');
+        generalBtn.classList.toggle('active', chatMode === 'general');
+    }
+    const input = document.getElementById('chatInput');
+    if(input){
+        input.placeholder = chatMode === 'general' ? 'Ask anything (general chat)' : 'Type a question or say: I understand';
+    }
+    localStorage.setItem(getChatModeKey(), chatMode);
+    loadChatSessions(chatMode);
+    saveChatPrefs();
+    renderChatList();
+    renderChatHistory();
+    if(chatMode === 'general'){
+        setChatStatus('General chat mode');
+    } else {
+        setChatStatus('Ask doubts while you learn');
+    }
+}
+
+function createNewChat(title){
+    const id = `chat_${Date.now()}_${Math.random().toString(16).slice(2,8)}`;
+    const item = { id, title: title || 'New Chat', createdAt: Date.now(), updatedAt: Date.now() };
+    chatSessions.unshift(item);
+    saveChatSessions();
+    return item;
+}
+
+function formatChatTime(ts){
+    try{
+        const d = new Date(ts);
+        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    } catch {
+        return '';
+    }
+}
+
+function renderChatList(){
+    const list = document.getElementById('chatList');
+    const title = document.getElementById('chatListTitle');
+    if(!list) return;
+    if(title) title.textContent = chatMode === 'general' ? 'General Chats' : 'Course Chats';
+    list.innerHTML = '';
+    chatSessions.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'chat-item' + (item.id === activeChatId ? ' active' : '');
+        div.innerHTML = `<div>${item.title || 'New Chat'}</div><div class="chat-meta">${formatChatTime(item.updatedAt)}</div>`;
+        div.onclick = () => setActiveChat(item.id);
+        list.appendChild(div);
+    });
+}
+
+function setActiveChat(chatId){
+    activeChatId = chatId;
+    saveChatPrefs();
+    renderChatList();
+    renderChatHistory();
+}
+
+function updateChatTitleIfNeeded(text){
+    if(!activeChatId) return;
+    const item = chatSessions.find(c => c.id === activeChatId);
+    if(!item || (item.title && item.title !== 'New Chat' && item.title !== 'Welcome')) return;
+    const cleaned = (text || '').trim();
+    if(!cleaned) return;
+    item.title = cleaned.slice(0, 32);
+    item.updatedAt = Date.now();
+    saveChatSessions();
+    renderChatList();
+}
+
+function storeMessage(role, text){
+    if(!activeChatId) return;
+    const key = getChatHistoryKey(activeChatId, chatMode);
+    const raw = localStorage.getItem(key);
+    const arr = raw ? JSON.parse(raw) : [];
+    arr.push({ role, text, ts: Date.now() });
+    localStorage.setItem(key, JSON.stringify(arr));
+    const item = chatSessions.find(c => c.id === activeChatId);
+    if(item){ item.updatedAt = Date.now(); saveChatSessions(); renderChatList(); }
+}
+
+function replaceLastAiMessage(text){
+    if(!activeChatId) return;
+    const key = getChatHistoryKey(activeChatId, chatMode);
+    const raw = localStorage.getItem(key);
+    const arr = raw ? JSON.parse(raw) : [];
+    let replaced = false;
+    for(let i=arr.length-1;i>=0;i--){
+        if(arr[i].role === 'ai'){
+            arr[i].text = text;
+            arr[i].ts = Date.now();
+            replaced = true;
+            break;
+        }
+    }
+    if(!replaced){
+        arr.push({ role: 'ai', text, ts: Date.now() });
+    }
+    localStorage.setItem(key, JSON.stringify(arr));
+    const item = chatSessions.find(c => c.id === activeChatId);
+    if(item){ item.updatedAt = Date.now(); saveChatSessions(); renderChatList(); }
+}
+
+function getHistoryForPayload(limit = 12){
+    if(!activeChatId) return [];
+    const key = getChatHistoryKey(activeChatId, chatMode);
+    const raw = localStorage.getItem(key);
+    const arr = raw ? JSON.parse(raw) : [];
+    const filtered = arr.filter(m => m.role === 'user' || m.role === 'ai');
+    const recent = filtered.slice(-limit);
+    return recent.map(m => ({
+        role: m.role === 'ai' ? 'assistant' : 'user',
+        content: m.text
+    }));
+}
+
+function enrichTopic(topic, langName){
+    const concept = [
+        `${topic.intro} In ${langName}, this becomes the foundation for building real features.`,
+        `Think about how this appears in everyday tasks: input, processing, and output.`,
+        `When you master this, later topics (like APIs, databases, or projects) feel much easier.`
+    ];
+    const keyPoints = [
+        `What it is: ${topic.name} helps you structure and control logic.`,
+        `When to use it: whenever you need clarity, safety, or reusable steps.`,
+        `How to practice: write tiny programs and explain each line.`
+    ];
+    const example = [
+        `Mini Example (${langName}):`,
+        `Goal: take input, process it, and show output.`,
+        `Step 1: define variables or data.`,
+        `Step 2: apply the rule from this topic.`,
+        `Step 3: print the result.`
+    ];
+    const practice = [
+        'Build a small task using this topic.',
+        'Change one input and predict the output before running.',
+        'Explain the result in one sentence.'
+    ];
+    const mistakes = [
+        'Skipping edge cases',
+        'Not validating inputs',
+        'Mixing types unintentionally'
+    ];
+    return {
+        ...topic,
+        intro: `${topic.intro} In ${langName}, this topic is a building block for larger projects.`,
+        teaching:
+`# ${topic.name}
+${topic.teaching}
+
+## Concept Summary
+- ${concept[0]}
+- ${concept[1]}
+- ${concept[2]}
+
+## Key Points
+- ${keyPoints[0]}
+- ${keyPoints[1]}
+- ${keyPoints[2]}
+
+## Guided Example
+- ${example[0]}
+- ${example[1]}
+- ${example[2]}
+- ${example[3]}
+- ${example[4]}
+
+## Practice
+- ${practice[0]}
+- ${practice[1]}
+- ${practice[2]}
+
+## Common Mistakes
+- ${mistakes[0]}
+- ${mistakes[1]}
+- ${mistakes[2]}`
+    };
+}
+
+function getCourseStructure(){
+    const python = {
+        intro:{title:'Python - Overview',definition:'Interpreted language with readable syntax',purpose:'Scripting, web, data',features:['Readable','Large ecosystem'],howToUse:'Install Python and run scripts'},
+        topics:[
+            {id:0,name:'Fundamentals & Environment',difficulty:'Beginner',intro:'Setup + first program',teaching:'Install Python, create hello.py and run with: python hello.py',quiz:[{q:'How do you run a Python file?',a:['python file.py','run file','open file'],c:0}]},
+            {id:1,name:'Variables & Types',difficulty:'Beginner',intro:'Store and use data',teaching:'Variables hold values like text and numbers.',quiz:[{q:'Which is text?',a:['123','"123"','12.3'],c:1}]},
+            {id:2,name:'Operators & Expressions',difficulty:'Beginner',intro:'Math and comparisons',teaching:'Use + - * / for math and == < > for comparisons.',quiz:[{q:'Which checks equality?',a:['=','==','!='],c:1}]},
+            {id:3,name:'Control Flow',difficulty:'Beginner',intro:'Make decisions',teaching:'Use if/elif/else to branch logic.',quiz:[{q:'Which keyword handles extra conditions?',a:['elif','elseif','else if'],c:0}]},
+            {id:4,name:'Loops',difficulty:'Beginner',intro:'Repeat work',teaching:'Use for loops to iterate and while loops for conditions.',quiz:[{q:'Which loop is condition-based?',a:['for','while','each'],c:1}]},
+            {id:5,name:'Functions',difficulty:'Beginner',intro:'Reusable blocks',teaching:'Define functions with def name():',quiz:[{q:'How to define a function?',a:['func name()','def name():','function name()'],c:1}]},
+            {id:6,name:'Lists & Tuples',difficulty:'Beginner',intro:'Ordered collections',teaching:'Lists are mutable, tuples are immutable.',quiz:[{q:'Which is immutable?',a:['list','tuple','set'],c:1}]},
+            {id:7,name:'Dictionaries & Sets',difficulty:'Beginner',intro:'Key-value and unique sets',teaching:'Dicts map keys to values; sets store unique items.',quiz:[{q:'Which uses key-value pairs?',a:['list','dict','tuple'],c:1}]},
+            {id:8,name:'Strings & Text',difficulty:'Beginner',intro:'Work with text',teaching:'Use slicing, methods like .lower(), .split().',quiz:[{q:'Which splits text?',a:['split()','join()','strip()'],c:0}]},
+            {id:9,name:'File Handling',difficulty:'Beginner',intro:'Read and write files',teaching:'Use open(path, mode) with with statement.',quiz:[{q:'Which mode is write?',a:['r','w','x'],c:1}]},
+            {id:10,name:'Exceptions',difficulty:'Beginner',intro:'Handle errors',teaching:'Use try/except to catch errors safely.',quiz:[{q:'Which handles errors?',a:['try/except','if/else','for/while'],c:0}]},
+            {id:11,name:'Modules & Packages',difficulty:'Beginner',intro:'Organize code',teaching:'Import modules with import or from x import y.',quiz:[{q:'Which imports a module?',a:['include math','import math','use math'],c:1}]},
+            {id:12,name:'Virtual Environments',difficulty:'Beginner',intro:'Isolate dependencies',teaching:'Use python -m venv venv to create one.',quiz:[{q:'Which creates a venv?',a:['python -m venv venv','pip install venv','venv create'],c:0}]},
+            {id:13,name:'OOP Basics',difficulty:'Intermediate',intro:'Model data',teaching:'Classes define structure; objects are instances.',quiz:[{q:'Objects are instances of?',a:['modules','classes','functions'],c:1}]},
+            {id:14,name:'Classes & Objects',difficulty:'Intermediate',intro:'Build blueprints',teaching:'Use __init__ to initialize object state.',quiz:[{q:'Constructor method?',a:['__init__','__main__','__call__'],c:0}]},
+            {id:15,name:'Inheritance & Polymorphism',difficulty:'Intermediate',intro:'Reuse and extend',teaching:'Subclass to inherit; override methods for new behavior.',quiz:[{q:'Which enables reuse?',a:['inheritance','recursion','iteration'],c:0}]},
+            {id:16,name:'Iterators & Generators',difficulty:'Intermediate',intro:'Efficient iteration',teaching:'Generators use yield to produce values lazily.',quiz:[{q:'Which keyword creates generator output?',a:['return','yield','pass'],c:1}]},
+            {id:17,name:'Comprehensions',difficulty:'Intermediate',intro:'Concise collections',teaching:'List/dict/set comprehensions build collections in one line.',quiz:[{q:'Which builds a list?',a:['[x for x in items]','(x for x in items)','{x for x in items}'],c:0}]},
+            {id:18,name:'Lambda & Functional',difficulty:'Intermediate',intro:'Small functions',teaching:'Use lambda for short anonymous functions.',quiz:[{q:'Lambda is used for?',a:['long scripts','anonymous functions','classes'],c:1}]},
+            {id:19,name:'Testing Basics',difficulty:'Intermediate',intro:'Write tests',teaching:'Use unittest or pytest to validate behavior.',quiz:[{q:'Testing helps you?',a:['break code','verify code','hide errors'],c:1}]},
+            {id:20,name:'Debugging & Logging',difficulty:'Intermediate',intro:'Find issues',teaching:'Use print/logging and debuggers to inspect.',quiz:[{q:'Logging is for?',a:['tracking events','deleting files','speeding CPU'],c:0}]},
+            {id:21,name:'Working with JSON',difficulty:'Intermediate',intro:'Data interchange',teaching:'Use json.loads and json.dumps for conversion.',quiz:[{q:'Which converts to JSON string?',a:['loads','dumps','parse'],c:1}]},
+            {id:22,name:'HTTP & APIs',difficulty:'Intermediate',intro:'Call web services',teaching:'Use requests or urllib to call APIs.',quiz:[{q:'Which HTTP method reads data?',a:['GET','POST','PUT'],c:0}]},
+            {id:23,name:'Databases Intro',difficulty:'Intermediate',intro:'Store data',teaching:'Use sqlite3 or ORMs to persist data.',quiz:[{q:'Which is a lightweight DB?',a:['sqlite3','photoshop','redis'],c:0}]},
+            {id:24,name:'Final Project',difficulty:'Advanced',intro:'Combine all skills',teaching:'Build a small app that reads data, processes it, and outputs results.',quiz:[{q:'What should you do first?',a:['Plan features','Skip tests','Avoid commits'],c:0}]}
+        ]
+    };
+
+    const java = {
+        intro:{title:'Java - Overview',definition:'Statically-typed language on the JVM',purpose:'Enterprise and Android apps',features:['Static types','JVM'],howToUse:'Install JDK, javac -> java'},
+        topics:[
+            {id:0,name:'Java Fundamentals & Setup',difficulty:'Beginner',intro:'JDK, class and first program',teaching:'Create HelloWorld.java, compile with javac, run with java.',quiz:[{q:'javac is used to?',a:['Run code','Compile code','Edit code'],c:1}]},
+            {id:1,name:'Variables & Types',difficulty:'Beginner',intro:'Primitives and references',teaching:'int,double,boolean,String are common types.',quiz:[{q:'Which is reference?',a:['int','double','String'],c:2}]},
+            {id:2,name:'Operators & Expressions',difficulty:'Beginner',intro:'Math and comparisons',teaching:'Use + - * / and == != < > for comparisons.',quiz:[{q:'Which checks equality?',a:['=','==','==='],c:1}]},
+            {id:3,name:'Control Flow',difficulty:'Beginner',intro:'Decisions and branches',teaching:'Use if/else and switch statements.',quiz:[{q:'Which handles multiple cases?',a:['switch','loop','try'],c:0}]},
+            {id:4,name:'Loops',difficulty:'Beginner',intro:'Repeat work',teaching:'Use for, while, do-while loops.',quiz:[{q:'Which runs at least once?',a:['for','while','do-while'],c:2}]},
+            {id:5,name:'Methods',difficulty:'Beginner',intro:'Reusable blocks',teaching:'Define methods with return types and parameters.',quiz:[{q:'Method return type example?',a:['def','void','func'],c:1}]},
+            {id:6,name:'Arrays',difficulty:'Beginner',intro:'Fixed-size collections',teaching:'Arrays hold fixed-size data of same type.',quiz:[{q:'Array index starts at?',a:['1','0','-1'],c:1}]},
+            {id:7,name:'Strings',difficulty:'Beginner',intro:'Text handling',teaching:'String is immutable; use StringBuilder for changes.',quiz:[{q:'Which is mutable?',a:['String','StringBuilder','char'],c:1}]},
+            {id:8,name:'OOP Basics',difficulty:'Beginner',intro:'Classes and objects',teaching:'Classes define structure; objects are instances.',quiz:[{q:'Objects are instances of?',a:['classes','packages','interfaces'],c:0}]},
+            {id:9,name:'Constructors',difficulty:'Beginner',intro:'Initialize objects',teaching:'Constructors set initial object state.',quiz:[{q:'Constructor name matches?',a:['class','method','variable'],c:0}]},
+            {id:10,name:'Inheritance',difficulty:'Intermediate',intro:'Reuse and extend',teaching:'Use extends to inherit behavior.',quiz:[{q:'Which keyword inherits?',a:['extends','implements','inherits'],c:0}]},
+            {id:11,name:'Interfaces',difficulty:'Intermediate',intro:'Contracts for classes',teaching:'Use implements to fulfill interface methods.',quiz:[{q:'Which keyword for interfaces?',a:['extends','implements','interface'],c:1}]},
+            {id:12,name:'Polymorphism',difficulty:'Intermediate',intro:'Many forms',teaching:'Overloading and overriding enable polymorphism.',quiz:[{q:'Overriding happens in?',a:['same class','subclass','package'],c:1}]},
+            {id:13,name:'Exceptions',difficulty:'Intermediate',intro:'Handle errors',teaching:'Use try/catch/finally for error handling.',quiz:[{q:'Which handles errors?',a:['try/catch','if/else','loop'],c:0}]},
+            {id:14,name:'Collections Framework',difficulty:'Intermediate',intro:'Lists, sets, maps',teaching:'Use ArrayList, HashSet, HashMap.',quiz:[{q:'Which stores key-value pairs?',a:['ArrayList','HashSet','HashMap'],c:2}]},
+            {id:15,name:'Generics',difficulty:'Intermediate',intro:'Type safety',teaching:'Use generics like List<String>.',quiz:[{q:'Generics help with?',a:['runtime speed','type safety','memory leaks'],c:1}]},
+            {id:16,name:'Streams & Lambdas',difficulty:'Intermediate',intro:'Functional style',teaching:'Use stream() and lambda expressions for data processing.',quiz:[{q:'Lambda syntax example?',a:['() -> {}','def x()','function()'],c:0}]},
+            {id:17,name:'File I/O',difficulty:'Intermediate',intro:'Read and write files',teaching:'Use Files, BufferedReader, FileWriter.',quiz:[{q:'Which reads text efficiently?',a:['BufferedReader','Scanner','PrintWriter'],c:0}]},
+            {id:18,name:'Concurrency Basics',difficulty:'Intermediate',intro:'Threads',teaching:'Use Thread or Runnable; understand synchronization.',quiz:[{q:'Which creates a thread?',a:['Thread','Stream','File'],c:0}]},
+            {id:19,name:'JVM & Memory',difficulty:'Intermediate',intro:'Understand runtime',teaching:'Stack vs heap, garbage collection basics.',quiz:[{q:'GC manages?',a:['memory','threads','I/O'],c:0}]},
+            {id:20,name:'Build Tools',difficulty:'Intermediate',intro:'Maven/Gradle',teaching:'Use build tools for dependencies and builds.',quiz:[{q:'Which is a build tool?',a:['Maven','JDK','JRE'],c:0}]},
+            {id:21,name:'Testing',difficulty:'Intermediate',intro:'Validate code',teaching:'Use JUnit for unit testing.',quiz:[{q:'Common Java test framework?',a:['JUnit','PyTest','Mocha'],c:0}]},
+            {id:22,name:'REST Basics',difficulty:'Intermediate',intro:'APIs and HTTP',teaching:'Use Spring or HttpClient to call APIs.',quiz:[{q:'Which HTTP method reads data?',a:['GET','POST','PUT'],c:0}]},
+            {id:23,name:'Databases Intro',difficulty:'Intermediate',intro:'Persist data',teaching:'Use JDBC or ORM for database access.',quiz:[{q:'JDBC is for?',a:['databases','UI','testing'],c:0}]},
+            {id:24,name:'Final Project',difficulty:'Advanced',intro:'Combine all skills',teaching:'Build a small Java app with I/O, collections, and testing.',quiz:[{q:'What should you do first?',a:['Plan features','Skip tests','Avoid commits'],c:0}]}
+        ]
+    };
+
+    function buildGenericTopics(langName){
+        const base = [
+            ['Fundamentals & Setup','Beginner','Install tools and run a first program','Install the toolchain/IDE and run a "Hello World" program.'],
+            ['Syntax & Basics','Beginner','Understand basic syntax','Learn basic statements, blocks, and formatting rules.'],
+            ['Variables & Types','Beginner','Store and use data','Learn primitive and reference types and how variables work.'],
+            ['Operators & Expressions','Beginner','Perform calculations','Use arithmetic, comparison, and logical operators.'],
+            ['Control Flow','Beginner','Make decisions','Use if/else and switch-like statements.'],
+            ['Loops','Beginner','Repeat tasks','Use for and while loops effectively.'],
+            ['Functions/Methods','Beginner','Reusable logic','Define and call functions with parameters and return values.'],
+            ['Collections','Beginner','Work with lists/maps','Use arrays, lists, maps, and sets.'],
+            ['Strings & Text','Beginner','Work with text','Concatenate, format, and search strings.'],
+            ['Input/Output','Beginner','Read and write data','Read from files or console and write outputs.'],
+            ['Error Handling','Beginner','Handle failures','Use try/catch or equivalent error handling.'],
+            ['Modules & Packages','Beginner','Organize code','Split code into modules and reuse them.'],
+            ['Testing Basics','Intermediate','Verify behavior','Write simple tests to validate logic.'],
+            ['Debugging','Intermediate','Find bugs','Use logging or debugger tools to inspect code.'],
+            ['OOP Basics','Intermediate','Classes and objects','Create classes and instances.'],
+            ['Inheritance & Polymorphism','Intermediate','Extend behavior','Reuse and override behavior safely.'],
+            ['Interfaces/Traits','Intermediate','Define contracts','Use interfaces or traits for abstraction.'],
+            ['Generics/Types','Intermediate','Type safety','Use generics or type parameters.'],
+            ['Functional Concepts','Intermediate','Higher-order logic','Use lambdas or functional patterns.'],
+            ['Concurrency Basics','Intermediate','Do things in parallel','Understand threads or async tasks.'],
+            ['Networking & HTTP','Intermediate','Call APIs','Make HTTP requests and handle responses.'],
+            ['Data Formats','Intermediate','JSON and parsing','Work with JSON and data serialization.'],
+            ['Database Intro','Intermediate','Store data','Connect to a database and run queries.'],
+            ['Build & Tooling','Intermediate','Project setup','Use build tools and dependency managers.'],
+            ['Performance & Memory','Advanced','Optimize','Understand memory usage and performance tips.'],
+            ['Project Architecture','Advanced','Scale codebases','Structure a real project into layers/modules.'],
+            ['Final Project','Advanced','Apply all skills','Build a small end-to-end application.']
+        ];
+
+        return base.map((t, i) => ({
+            id: i,
+            name: t[0],
+            difficulty: t[1],
+            intro: t[2],
+            teaching: `${t[3]} (${langName})`,
+            quiz: [{ q: `Key goal of "${t[0]}"?`, a: ['Understand basics','Skip practice','Avoid tools'], c: 0 }]
+        }));
+    }
+
+    const lang = (language||'').toLowerCase();
+    const withQuizzes = (items, langName) => items.map(t => ensureQuizCount(enrichTopic(t, langName), 5, langName));
+    if(lang.includes('python')) return {intro:python.intro,topics:withQuizzes(python.topics,'Python')};
+    if(lang.includes('java') && !lang.includes('javascript')) return {intro:java.intro,topics:withQuizzes(java.topics,'Java')};
+    const genericIntro = {
+        title:`${language} - Overview`,
+        definition:`Core programming concepts applied in ${language}.`,
+        purpose:`Build real-world apps with ${language}.`,
+        features:['Structured learning','Hands-on practice'],
+        howToUse:`Install ${language} tools and start coding.`
+    };
+    return {intro:genericIntro,topics:buildGenericTopics(language).map(t=>ensureQuizCount(enrichTopic(t,language), 5, language))};
+}
+
+function ensureQuizCount(topic, count, langName){
+    const base = topic.quiz ? [...topic.quiz] : [];
+    const seen = new Set(base.map(q => q.q));
+    const easyTemplates = [
+        (t) => ({ q: `What is the main goal of ${t.name}?`, a: ['Build understanding', 'Skip practice', 'Avoid tools'], c: 0 }),
+        (t) => ({ q: `Which is a correct use of ${t.name}?`, a: ['Solve a small task step-by-step', 'Ignore inputs', 'Remove variables'], c: 0 }),
+        (t) => ({ q: `Best practice for ${t.name}?`, a: ['Test with small examples', 'Guess results', 'Avoid documentation'], c: 0 }),
+        (t) => ({ q: `Common mistake in ${t.name}?`, a: ['Skipping edge cases', 'Writing clear steps', 'Explaining output'], c: 0 })
+    ];
+    const hardTemplates = [
+        (t) => ({ q: `You are refactoring code. Which choice applies ${t.name} to improve maintainability?`, a: ['Hide all logic in one long block', 'Use ${t.name} to separate concerns', 'Remove structure to reduce lines'], c: 1 }),
+        (t) => ({ q: `Which scenario most clearly needs ${t.name}?`, a: ['A single static value', 'Repeated steps with changing input', 'A comment-only file'], c: 1 }),
+        (t) => ({ q: `What is the biggest risk of skipping ${t.name} in real projects?`, a: ['Nothing changes', 'Code becomes harder to test', 'It makes code run faster'], c: 1 }),
+        (t) => ({ q: `Pick the best reasoning about ${t.name}:`, a: ['It is only for large teams', 'It adds clarity and reduces bugs', 'It replaces all other concepts'], c: 1 }),
+        (t) => ({ q: `Which action shows deeper understanding of ${t.name}?`, a: ['Memorizing definitions', 'Explaining why each step is needed', 'Avoiding examples'], c: 1 })
+    ];
+    const extraTemplates = [
+        (t) => ({ q: `Which outcome shows you applied ${t.name} correctly?`, a: ['Clear, testable steps', 'Hidden logic', 'No structure'], c: 0 }),
+        (t) => ({ q: `How would you explain ${t.name} in one sentence?`, a: ['A way to structure logic', 'A way to avoid thinking', 'A tool for UI only'], c: 0 }),
+        (t) => ({ q: `If a bug keeps repeating, which ${t.name} habit helps most?`, a: ['Ignore inputs', 'Add checks and logs', 'Remove conditions'], c: 1 }),
+        (t) => ({ q: `Which example best fits ${t.name}?`, a: ['Step-by-step process', 'Random output', 'Deleting variables'], c: 0 })
+    ];
+    const targetHard = Math.ceil(count * 0.6);
+    let hardAdded = 0;
+    let easyAdded = 0;
+    let extraAdded = 0;
+    let i = 0;
+    const pushUnique = (qObj) => {
+        if(seen.has(qObj.q)){
+            const suffix = ` (${topic.name} case ${seen.size + 1})`;
+            qObj = { ...qObj, q: qObj.q + suffix };
+        }
+        seen.add(qObj.q);
+        base.push(qObj);
+    };
+    while(base.length < count){
+        if(hardAdded < targetHard){
+            const tmpl = hardTemplates[hardAdded % hardTemplates.length];
+            pushUnique(tmpl(topic));
+            hardAdded += 1;
+        } else if(extraAdded < 2 && base.length + (count - base.length) > 2){
+            const tmpl = extraTemplates[extraAdded % extraTemplates.length];
+            pushUnique(tmpl(topic));
+            extraAdded += 1;
+        } else {
+            const tmpl = easyTemplates[easyAdded % easyTemplates.length];
+            pushUnique(tmpl(topic));
+            easyAdded += 1;
+        }
+        i += 1;
+    }
+    return { ...topic, quiz: base.slice(0, count) };
+}
+
+function startSyllabus(){
+    learningStarted = true;
+    courseIntroShown = false;
+    document.getElementById('courseBadge').textContent = language;
+    document.getElementById('headerStatus').textContent = `Learning ${language}`;
+    document.getElementById('chatStatus').textContent = 'Ask doubts while you learn';
+    document.getElementById('modeTag').textContent = 'Chat Mode';
+    setNavEnabled(true);
+    const course = getCourseStructure();
+    topics = course.topics;
+    completedTopics = JSON.parse(localStorage.getItem(getProgressKey('completedTopics'))||'[]');
+    lastScore = JSON.parse(localStorage.getItem(getProgressKey('lastScore'))||'null');
+    attempts = parseInt(localStorage.getItem(getProgressKey('attempts'))||'0',10);
+    renderTopicsList();
+    showCourseIntroOnce(course.intro);
+    loadTopic(getNextTopicIndex());
+    updateReport();
+    updateCoursePanel();
+}
+
+function getNextTopicIndex(){
+    if(!topics.length) return 0;
+    const stored = parseInt(localStorage.getItem(getProgressKey('lastTopic')) || '-1', 10);
+    if(stored >= 0 && stored < topics.length && !completedTopics.includes(stored)){
+        return stored;
+    }
+    for(let i=0;i<topics.length;i++){
+        if(!completedTopics.includes(i)) return i;
+    }
+    return currentTopic >= 0 ? currentTopic : 0;
+}
+
+function renderTopicsList(){
+    const el = document.getElementById('topicsList'); el.innerHTML='';
+    if(!learningStarted){
+        const d = document.createElement('div');
+        d.className = 'topic locked';
+        d.textContent = 'Syllabus locked. Say "yes" to start.';
+        el.appendChild(d);
+        return;
+    }
+    topics.forEach((t,i)=>{
+        const d = document.createElement('div');
+        const lockedByProgress = i>0 && !completedTopics.includes(i-1);
+        const lockedByQuiz = topicLockedDuringQuiz && i!==currentTopic;
+        const isLocked = lockedByProgress || lockedByQuiz;
+        d.className = 'topic' + (i===currentTopic? ' active':'') + (isLocked? ' locked':'');
+        d.textContent = `${i+1}. ${t.name}` + (completedTopics.includes(i)? ' [done]': isLocked ? ' [locked]':'');
+        d.onclick = ()=>{ if(isLocked) return; loadTopic(i)};
+        el.appendChild(d);
+    });
+}
+
+function renderRichText(txt){
+    const wrapper = document.createElement('div');
+    const lines = txt.split('\n');
+    let list = null;
+    let inCode = false;
+    let codeLines = [];
+    const appendInline = (parent, text) => {
+        const parts = text.split('`');
+        parts.forEach((part, idx) => {
+            if(idx % 2 === 1){
+                const code = document.createElement('code');
+                code.textContent = part;
+                parent.appendChild(code);
+            } else if(part){
+                parent.appendChild(document.createTextNode(part));
+            }
+        });
+    };
+    lines.forEach(line=>{
+        const trimmed = line.trim();
+        if(trimmed.startsWith('```')){
+            if(!inCode){
+                inCode = true;
+                codeLines = [];
+            } else {
+                const pre = document.createElement('pre');
+                const code = document.createElement('code');
+                code.textContent = codeLines.join('\n');
+                pre.appendChild(code);
+                wrapper.appendChild(pre);
+                inCode = false;
+            }
+            list = null;
+            return;
+        }
+        if(inCode){
+            codeLines.push(line);
+            return;
+        }
+        if(!trimmed){
+            list = null;
+            return;
+        }
+        if(trimmed.startsWith('# ')){
+            const h = document.createElement('h4');
+            h.textContent = trimmed.replace('# ','');
+            wrapper.appendChild(h);
+            list = null;
+            return;
+        }
+        if(trimmed.startsWith('## ')){
+            const h = document.createElement('h4');
+            h.textContent = trimmed.replace('## ','');
+            wrapper.appendChild(h);
+            list = null;
+            return;
+        }
+        if(trimmed.startsWith('- ')){
+            if(!list){
+                list = document.createElement('ul');
+                wrapper.appendChild(list);
+            }
+            const li = document.createElement('li');
+            appendInline(li, trimmed.replace('- ',''));
+            list.appendChild(li);
+            return;
+        }
+        list = null;
+        const p = document.createElement('p');
+        appendInline(p, trimmed);
+        wrapper.appendChild(p);
+    });
+    return wrapper;
+}
+
+function addMessage(txt, sender='ai'){
+    const c = document.getElementById('chatArea');
+    const m = document.createElement('div');
+    m.className = 'msg ' + sender;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.appendChild(renderRichText(txt));
+    m.appendChild(bubble);
+    c.appendChild(m);
+    c.scrollTop = c.scrollHeight;
+    return m;
+}
+function addDivider(text){
+    const c = document.getElementById('chatArea');
+    const d = document.createElement('div');
+    d.className = 'divider';
+    d.textContent = text;
+    c.appendChild(d);
+    c.scrollTop = c.scrollHeight;
+}
+function updateMessage(el, txt){
+    if(!el) return;
+    const bubble = el.querySelector('.bubble');
+    if(!bubble) return;
+    bubble.innerHTML = '';
+    bubble.appendChild(renderRichText(txt));
+}
+
+function setLoadingSkeleton(el){
+    if(!el) return;
+    const bubble = el.querySelector('.bubble');
+    if(!bubble) return;
+    bubble.innerHTML = `
+        <div class="skeleton h1"></div>
+        <div class="skeleton line"></div>
+        <div class="skeleton line short"></div>
+        <div class="skeleton h2"></div>
+        <div class="skeleton line"></div>
+        <div class="skeleton line"></div>
+        <div class="skeleton line short"></div>
+        <div class="skeleton h2"></div>
+        <div class="skeleton line short"></div>
+        <div class="skeleton line tiny"></div>
+    `;
+}
+function clearMessages(){ document.getElementById('chatArea').innerHTML=''; }
+
+function addDividerAndStore(text){
+    addDivider(text);
+    storeMessage('divider', text);
+}
+
+function renderChatHistory(){
+    clearMessages();
+    if(!activeChatId){
+        addMessage(`Hi! I'm your ${language} tutor. Ask me anything.`, 'ai');
+        return;
+    }
+    const key = getChatHistoryKey(activeChatId, chatMode);
+    const raw = localStorage.getItem(key);
+    const arr = raw ? JSON.parse(raw) : [];
+    if(!arr.length){
+        const greeting = `Hi! I'm your ${language} tutor. Want to start the syllabus now? Say "yes" to begin, or ask me any question.`;
+        addMessage(greeting, 'ai');
+        storeMessage('ai', greeting);
+        return;
+    }
+    arr.forEach(m => {
+        if(!m.text) return;
+        if(m.role === 'divider'){
+            addDivider(m.text);
+        } else if(m.role === 'system'){
+            addMessage(m.text, 'system');
+        } else {
+            addMessage(m.text, m.role === 'user' ? 'user' : 'ai');
+        }
+    });
+}
+
+function formatAiError(err){
+    const raw = (err && (err.detail || err.message)) ? (err.detail || err.message) : String(err || '');
+    const msg = raw.toLowerCase();
+    if(msg.includes('failed to fetch') || msg.includes('network') || msg.includes('fetch')){
+        return 'Cannot reach the AI service. Make sure the backend is running and API_URL is correct.';
+    }
+    if(msg.includes('openai_api_key is not configured') || msg.includes('not configured')){
+        return 'OPENAI_API_KEY is not configured. Set it in .env, then restart the backend.';
+    }
+    if(msg.includes('invalid_api_key') || msg.includes('incorrect api key') || msg.includes('api key')){
+        return 'Your OPENAI_API_KEY is invalid. Update it in .env and restart the backend.';
+    }
+    if(msg.includes('rate limit')){
+        return 'Rate limit hit. Wait a moment and try again.';
+    }
+    return raw ? `AI service error: ${raw}` : 'AI service error. Please try again.';
+}
+
+function setChatStatus(text){
+    const mode = document.getElementById('modeTag');
+    if(mode && mode.textContent !== 'Chat Mode') return;
+    const status = document.getElementById('chatStatus');
+    if(status) status.textContent = text;
+}
+
+async function pingApi(url, timeoutMs){
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try{
+        const res = await fetch(`${url}/health`, { signal: controller.signal });
+        return res.ok;
+    } catch {
+        return false;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function resolveApiUrl(){
+    const saved = localStorage.getItem('apiUrl');
+    const candidates = saved ? [saved] : ['http://localhost:8000', 'http://localhost:8001'];
+    for(const base of candidates){
+        if(await pingApi(base, 1200)){
+            API_URL = base;
+            localStorage.setItem('apiUrl', base);
+            aiOnline = true;
+            return;
+        }
+    }
+    API_URL = candidates[0] || 'http://localhost:8000';
+    aiOnline = false;
+}
+
+async function fetchWithTimeout(url, options, timeoutMs = 8000){
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try{
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        return res;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+function buildFallbackReply(question, errorNote){
+    const t = topics[currentTopic];
+    const title = t ? `${t.name} (${t.difficulty || 'Beginner'})` : `${language} basics`;
+    const intro = t ? t.intro : `Here is a quick refresher for ${language}.`;
+    const teaching = t ? t.teaching : `Ask about concepts like variables, loops, functions, or data structures.`;
+    const q = (question || '').trim();
+
+    const examples = {
+        python: `x = 5\nprint(x)\n\nif x > 3:\n    print("x is greater than 3")`,
+        javascript: `const x = 5;\nconsole.log(x);\n\nif (x > 3) {\n  console.log("x is greater than 3");\n}`,
+        typescript: `const x: number = 5;\nconsole.log(x);\n\nif (x > 3) {\n  console.log("x is greater than 3");\n}`,
+        java: `int x = 5;\nSystem.out.println(x);\n\nif (x > 3) {\n    System.out.println("x is greater than 3");\n}`,
+        "c++": `int x = 5;\nstd::cout << x << std::endl;\n\nif (x > 3) {\n    std::cout << "x is greater than 3" << std::endl;\n}`,
+        go: `x := 5\nfmt.Println(x)\n\nif x > 3 {\n    fmt.Println("x is greater than 3")\n}`,
+        rust: `let x = 5;\nprintln!("{}", x);\n\nif x > 3 {\n    println!("x is greater than 3");\n}`,
+        sql: `SELECT *\nFROM users\nWHERE age > 18;`
+    };
+    const langKey = String(language || '').toLowerCase();
+    const example = examples[langKey] || `// Example in ${language}\n// Try a small input, process it, and print/output the result.`;
+    const note = errorNote ? `AI service is offline, so I'm using a local tutor response.\n\n` : '';
+    const hint = q ? `Your question: "${q}"\n\n` : '';
+
+    return (
+        `${note}${hint}` +
+        `# ${title}\n` +
+        `${intro}\n\n` +
+        `## Quick Explanation\n` +
+        `${teaching}\n\n` +
+        `## Quick Example\n` +
+        '```\n' +
+        `${example}\n` +
+        '```\n' +
+        `## Next Step\n` +
+        `- Ask a more specific question about ${t ? t.name : language}.\n` +
+        `- Example: "Can you show a simple ${t ? t.name.toLowerCase() : language.toLowerCase()} example?"`
+    );
+}
+
+async function fetchNonStreamReply(payload){
+    const res = await fetch(`${API_URL}/ai/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+        const errJson = await res.json().catch(()=> ({}));
+        const detail = errJson.detail || `AI service error (${res.status})`;
+        const e = new Error(detail);
+        e.status = res.status;
+        throw e;
+    }
+    const data = await res.json().catch(()=> ({}));
+    return (data && data.reply) ? data.reply : '';
+}
+
+let courseIntroShown=false;
+function showCourseIntroOnce(intro){
+    if(courseIntroShown) return;
+    courseIntroShown=true;
+    setTimeout(()=> {
+        const text = `${intro.title}\n\n${intro.definition}\n\nPurpose: ${intro.purpose}\nFeatures: ${intro.features.join(', ')}`;
+        addMessage(text,'ai');
+        storeMessage('ai', text);
+    },300);
+}
+
+async function fetchLesson(topic){
+    const payload = {
+        language: language,
+        topic: topic.name,
+        difficulty: topic.difficulty || 'Beginner'
+    };
+    const res = await fetchWithTimeout(`${API_URL}/ai/lesson`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }, 8000);
+    if(!res.ok){
+        const errJson = await res.json().catch(()=> ({}));
+        const detail = errJson.detail || `AI lesson error (${res.status})`;
+        throw new Error(detail);
+    }
+    const data = await res.json().catch(()=> ({}));
+    return data.lesson || '';
+}
+
+function isGenericLessonResponse(content){
+    const text = String(content || '').toLowerCase();
+    if(!text) return true;
+    const genericSignals = [
+        'please provide the subject',
+        'please provide:',
+        'i need more information',
+        'to generate a lesson on a specific topic',
+        'subject area',
+        'particular topic',
+        'age group or skill level',
+        'this information will help me create'
+    ];
+    return genericSignals.some(s => text.includes(s));
+}
+
+function buildTopicFallbackLesson(topic){
+    return `# ${topic.name} (${topic.difficulty})\n${topic.intro}\n\n${topic.teaching}`;
+}
+
+function isTopicSpecificLesson(content, topic){
+    const text = String(content || '').toLowerCase();
+    if(!text) return false;
+    if(isGenericLessonResponse(text)) return false;
+    const topicName = String(topic?.name || '').toLowerCase();
+    const nameWords = topicName.split(/[^a-z0-9]+/).filter(w => w.length >= 4);
+    if(topicName && text.includes(topicName)) return true;
+    const wordMatches = nameWords.filter(w => text.includes(w)).length;
+    if(wordMatches >= Math.min(2, nameWords.length)) return true;
+    const langName = String(language || '').toLowerCase();
+    return !!(langName && text.includes(langName));
+}
+
+function loadTopic(idx){
+    if(!learningStarted){
+        addMessage('Say "yes" to start the syllabus first.','ai');
+        return;
+    }
+    if(topicLockedDuringQuiz){ addMessage("You're in a quiz - finish it first.",'ai'); return; }
+    if(idx>0 && !completedTopics.includes(idx-1)){ addMessage('This topic is locked. Pass the previous topic test first.','ai'); return; }
+    currentTopic=idx;
+    localStorage.setItem(getProgressKey('lastTopic'), String(currentTopic));
+    renderTopicsList();
+    const t = topics[idx];
+    addDividerAndStore(`Topic: ${t.name}`);
+    const headerMsg = addMessage(`Loading lesson for ${t.name}...`,'ai');
+    const cacheKey = `${language}:${t.id}`;
+    const fallback = buildTopicFallbackLesson(t);
+    // Always show topic-specific local lesson first to avoid unrelated/random AI replies.
+    updateMessage(headerMsg, fallback);
+    storeMessage('ai', fallback);
+    if(lessonCache[cacheKey]){
+        updateMessage(headerMsg, lessonCache[cacheKey]);
+    } else {
+        fetchLesson(t)
+            .then(content => {
+                if(isTopicSpecificLesson(content, t)){
+                    lessonCache[cacheKey] = content;
+                    updateMessage(headerMsg, content);
+                    replaceLastAiMessage(content);
+                }
+            })
+            .catch(() => {
+                // Keep already-rendered local lesson on fetch failure.
+            });
+    }
+    setTimeout(()=> {
+        const text = 'Do you understand this topic? Reply: "I understand" to open the quiz.';
+        addMessage(text, 'ai');
+        storeMessage('ai', text);
+    },1200);
+    updateReport();
+    updateCoursePanel();
+}
+
+function setNavEnabled(enabled){
+    const prev = document.getElementById('btnPrev');
+    const next = document.getElementById('btnNext');
+    prev.disabled = !enabled;
+    next.disabled = !enabled;
+}
+
+function isYes(text){
+    return /\b(yes|yep|yeah|ok|okay|sure|start|begin|learn|go)\b/.test(text);
+}
+function isNo(text){
+    return /\b(no|not now|later|stop|cancel)\b/.test(text);
+}
+function isRetry(text){
+    return /\b(try again|retry|retake|again|restart|retest)\b/.test(text);
+}
+
+async function handleUserText(text, source = 'chat-input'){
+    updateChatTitleIfNeeded(text);
+    addMessage(text,'user');
+    storeMessage('user', text);
+    const l=text.toLowerCase();
+    if(!learningStarted){
+        if(isYes(l)){
+            const text = 'Great — starting the syllabus now.';
+            addMessage(text,'ai');
+            storeMessage('ai', text);
+            startSyllabus();
+            return;
+        }
+        if(isNo(l)){
+            const text = 'No problem. Ask me anything. Say "yes" whenever you want to start the syllabus.';
+            addMessage(text,'ai');
+            storeMessage('ai', text);
+            return;
+        }
+        if(chatMode === 'course'){
+            const text = 'Say "yes" when you are ready to start learning. If you want general chat, switch to General mode.';
+            addMessage(text,'ai');
+            storeMessage('ai', text);
+            return;
+        }
+    }
+    if(learningStarted && isRetry(l)){
+        startQuiz();
+    } else if(learningStarted && (l.includes('understand')||l.includes("i understand")||l.includes('i am ready')||l.includes('ready'))){
+        startQuiz();
+    } else {
+        if(chatMode === 'course' && source === 'chat-input'){
+            const text = 'Click a topic from "Available Topics" to get the lesson. Use "Ask About This Topic" for doubts.';
+            addMessage(text, 'ai');
+            storeMessage('ai', text);
+            return;
+        }
+        const thinking = addMessage('Thinking...', 'ai');
+        storeMessage('ai', '');
+        const topicName = chatMode === 'general' ? null : (topics[currentTopic] ? topics[currentTopic].name : null);
+        const payload = {
+            message: text,
+            language: language,
+            topic: topicName,
+            user_email: localStorage.getItem('email') || null,
+            history: getHistoryForPayload(12),
+            mode: chatMode
+        };
+        try{
+            if(!USE_STREAMING){
+                const reply = await fetchNonStreamReply(payload);
+                const finalText = reply || buildFallbackReply(text);
+                updateMessage(thinking, finalText);
+                replaceLastAiMessage(finalText);
+                return;
+            }
+            const res = await fetch(`${API_URL}/ai/chat/stream`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if(!res.ok || !res.body){
+                const err = await res.json().catch(()=> ({}));
+                throw new Error(err.detail || 'AI service error');
+            }
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullText = '';
+            while(true){
+                const { value, done } = await reader.read();
+                if(done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const parts = buffer.split('\n\n');
+                buffer = parts.pop() || '';
+                parts.forEach(part => {
+                    const line = part.split('\n').find(l => l.startsWith('data: '));
+                    if(!line) return;
+                    const data = line.slice(6).trim();
+                    if(data === '[DONE]') return;
+                    try{
+                        const obj = JSON.parse(data);
+                        if(obj.error){
+                            aiOnline = false;
+                            setChatStatus('Offline mode: local tutor replies');
+                            const finalText = buildFallbackReply(text, obj.error);
+                            updateMessage(thinking, finalText);
+                            replaceLastAiMessage(finalText);
+                            return;
+                        }
+                        if(obj.delta){
+                            fullText += obj.delta;
+                            updateMessage(thinking, fullText);
+                        }
+                    } catch {
+                        fullText += data;
+                        updateMessage(thinking, fullText);
+                    }
+                });
+            }
+            if(!fullText){
+                const reply = await fetchNonStreamReply(payload);
+                const finalText = reply || buildFallbackReply(text);
+                updateMessage(thinking, finalText);
+                replaceLastAiMessage(finalText);
+            } else {
+                replaceLastAiMessage(fullText);
+            }
+        } catch (err){
+            try{
+                const reply = await fetchNonStreamReply(payload);
+                const finalText = reply || buildFallbackReply(text);
+                updateMessage(thinking, finalText);
+                replaceLastAiMessage(finalText);
+            } catch (err2){
+                aiOnline = false;
+                setChatStatus('Offline mode: local tutor replies');
+                const finalText = buildFallbackReply(text, formatAiError(err2));
+                updateMessage(thinking, finalText);
+                replaceLastAiMessage(finalText);
+            }
+        }
+        if(!learningStarted){
+            addMessage('If you want to start the syllabus, just say "yes".','ai');
+        }
+    }
+}
+
+// Quiz panel
+function shuffleArray(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function shuffleQuestion(q){
+    const options = (q.a || []).map((text, idx) => ({ text, idx }));
+    shuffleArray(options);
+    const newOptions = options.map(o => o.text);
+    const newCorrect = options.findIndex(o => o.idx === q.c);
+    return { ...q, a: newOptions, c: newCorrect };
+}
+
+const SHUFFLE_QUIZ_OPTIONS = false;
+
+function buildQuizQuestions(input){
+    const base = Array.isArray(input) ? input : (Array.isArray(input.quiz) ? input.quiz : []);
+    if(!SHUFFLE_QUIZ_OPTIONS){
+        return base.map(q => ({ ...q, a: Array.isArray(q.a) ? [...q.a] : [], c: q.c }));
+    }
+    return base.map(q => shuffleQuestion(q));
+}
+
+function startQuiz(){
+    topicLockedDuringQuiz=true;
+    renderTopicsList();
+    const t = topics[currentTopic];
+    showTestPanel();
+    const content = document.getElementById('testContent');
+    if(content){
+        content.innerHTML = '<div class="subhead">Generating quiz...</div>';
+    }
+    fetchQuiz(t)
+        .then(questions => {
+            if(!questions.length) throw new Error('No questions');
+            quizState = {questions: buildQuizQuestions(questions), answers:[]};
+            renderQuiz();
+        })
+        .catch(() => {
+            quizState = {questions: buildQuizQuestions(t), answers:[]};
+            renderQuiz();
+        });
+}
+
+function showTestPanel(){
+    document.getElementById('testPanel').classList.remove('hidden');
+    document.getElementById('chatArea').classList.add('hidden');
+    document.getElementById('chatInputRow').classList.add('hidden');
+    document.getElementById('modeTag').textContent = 'Test Mode';
+    document.getElementById('chatStatus').textContent = 'Complete the quiz to continue learning';
+    document.getElementById('testTitle').textContent = `Quiz: ${topics[currentTopic].name}`;
+}
+function closeTestPanel(){
+    document.getElementById('testPanel').classList.add('hidden');
+    document.getElementById('chatArea').classList.remove('hidden');
+    document.getElementById('chatInputRow').classList.remove('hidden');
+    document.getElementById('modeTag').textContent = 'Chat Mode';
+    document.getElementById('chatStatus').textContent = 'Ask doubts while you learn';
+}
+
+function renderQuiz(){
+    const content=document.getElementById('testContent');
+    content.innerHTML='';
+    if(!quizState || !Array.isArray(quizState.questions) || !quizState.questions.length){
+        content.innerHTML = '<div class="subhead">No quiz questions available yet. Please try again.</div>';
+        return;
+    }
+    quizState.questions.forEach((q,i)=>{
+        const div=document.createElement('div'); div.className='question';
+        const qh=document.createElement('div'); qh.textContent = `${i+1}. ${q.q}`; div.appendChild(qh);
+        q.a.forEach((opt,j)=>{
+            const o=document.createElement('label'); o.className='option';
+            const inp=document.createElement('input'); inp.type='radio'; inp.name='q'+i; inp.value=j; inp.onchange=()=> quizState.answers[i]=parseInt(inp.value);
+            o.appendChild(inp); o.appendChild(document.createTextNode(' '+opt)); div.appendChild(o);
+        });
+        content.appendChild(div);
+    });
+}
+
+async function submitTest(){
+    const q=quizState.questions;
+    const a=quizState.answers;
+    let score=0;
+    for(let i=0;i<q.length;i++){ if(a[i]===q[i].c) score++; }
+    const pct = q.length? Math.round(score/q.length*100):0;
+    lastScore = pct;
+    attempts += 1;
+    localStorage.setItem(getProgressKey('lastScore'), JSON.stringify(lastScore));
+    localStorage.setItem(getProgressKey('attempts'), String(attempts));
+    const scoreText = `You scored ${pct}% (${score}/${q.length})`;
+    addMessage(scoreText,'ai');
+    storeMessage('ai', scoreText);
+
+    // Persist test result to backend so dashboard/leaderboard can calculate points.
+    try {
+        const userEmail = String(localStorage.getItem('email') || '').trim().toLowerCase();
+        if (userEmail) {
+            const answersPayload = Array.from({ length: q.length }, (_, i) =>
+                Number.isInteger(a[i]) ? a[i] : -1
+            );
+            await fetch(`${API_URL}/test/submit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_email: userEmail,
+                    language,
+                    topic: topics[currentTopic]?.name || 'Basics',
+                    answers: answersPayload,
+                    time_taken: q.length * 60,
+                    score_percentage: pct,
+                    correct_answers: score,
+                    total_questions: q.length
+                })
+            });
+        }
+    } catch (err) {
+        console.error('Failed to save test result to backend:', err);
+    }
+
+    if(pct>=70){
+        const passText = 'Passed - topic completed.';
+        addMessage(passText,'ai');
+        storeMessage('ai', passText);
+        if(!completedTopics.includes(currentTopic)) completedTopics.push(currentTopic);
+        localStorage.setItem(getProgressKey('completedTopics'), JSON.stringify(completedTopics));
+        topicLockedDuringQuiz=false;
+        closeTestPanel();
+        renderTopicsList();
+        const nextIdx = getNextTopicIndex();
+        if(nextIdx !== currentTopic && nextIdx < topics.length){
+            const nextMsg = `Great! Moving to the next topic: ${topics[nextIdx].name}.`;
+            addMessage(nextMsg,'ai');
+            storeMessage('ai', nextMsg);
+            loadTopic(nextIdx);
+        } else {
+            const doneMsg = 'You completed all available topics in this course.';
+            addMessage(doneMsg,'ai');
+            storeMessage('ai', doneMsg);
+        }
+    } else {
+        const failText = 'Did not pass - try again or review the material.';
+        addMessage(failText,'ai');
+        storeMessage('ai', failText);
+        topicLockedDuringQuiz=false;
+        closeTestPanel();
+    }
+    updateReport();
+}
+
+async function fetchQuiz(topic){
+    const payload = {
+        language: language,
+        topic: topic.name,
+        difficulty: topic.difficulty || 'Beginner',
+        count: 5
+    };
+    const res = await fetchWithTimeout(`${API_URL}/ai/quiz`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }, 8000);
+    if(!res.ok){
+        throw new Error('Quiz generation failed');
+    }
+    const data = await res.json().catch(()=> ({}));
+    const questions = Array.isArray(data.questions) ? data.questions : [];
+    const toOptions = (opts) => {
+        if(Array.isArray(opts)) return opts;
+        if(typeof opts === 'string'){
+            const text = opts.replace(/\n/g,' ').trim();
+            const parts = text.split(/(?:^|\s)[A-D]\./).map(p => p.trim()).filter(Boolean);
+            if(parts.length) return parts;
+            const starters = ['To ', 'When ', 'Which ', 'How ', 'What '];
+            for(const s of starters){
+                if(text.includes(` ${s}`)){
+                    const chunks = text.split(` ${s}`).map((p, idx) => (idx === 0 ? p : s + p).trim()).filter(Boolean);
+                    if(chunks.length >= 3) return chunks;
+                }
+            }
+            const fallback = text.split(/\s{2,}|\s\|\s|,\s/).map(p => p.trim()).filter(Boolean);
+            if(fallback.length >= 3) return fallback;
+            const words = text.split(' ').filter(Boolean);
+            if(words.length >= 8){
+                const size = Math.ceil(words.length / 4);
+                return [words.slice(0,size).join(' '), words.slice(size, size*2).join(' '), words.slice(size*2, size*3).join(' '), words.slice(size*3).join(' ')];
+            }
+            return [opts];
+        }
+        return [];
+    };
+    const normalize = (q) => {
+        let options = toOptions(q.a || q.options || []);
+        const rawCorrect = q.c !== undefined ? q.c : (q.correct !== undefined ? q.correct : (q.answer ?? q.correct_answer ?? q.correctAnswer));
+        const correctSource = q.c !== undefined ? 'c' : (q.correct !== undefined ? 'correct' : (q.answer !== undefined ? 'answer' : (q.correct_answer !== undefined ? 'correct_answer' : (q.correctAnswer !== undefined ? 'correctAnswer' : 'unknown'))));
+        let correct = rawCorrect;
+
+        if(typeof correct === 'string'){
+            const trimmed = correct.trim();
+            const upper = trimmed.toUpperCase();
+            const map = { 'A':0,'B':1,'C':2,'D':3 };
+            if(map[upper] !== undefined){
+                correct = map[upper];
+            } else if(/^\d+$/.test(trimmed)){
+                correct = parseInt(trimmed, 10);
+            } else {
+                const idx = options.findIndex(opt => String(opt).trim().toLowerCase() === trimmed.toLowerCase());
+                if(idx >= 0) correct = idx;
+            }
+        }
+
+        if(Number.isInteger(correct)){
+            // If AI sends 1-based indices, normalize to 0-based.
+            if(correctSource !== 'c' && correct >= 1 && correct <= options.length){
+                correct = correct - 1;
+            }
+            if(correct < 0 || correct >= options.length){
+                if(correct >= 1 && correct <= options.length){
+                    correct = correct - 1;
+                }
+            }
+        }
+        return { q: q.q || q.question || '', a: options, c: correct };
+    };
+    return questions.map(normalize).filter(q => q.q && Array.isArray(q.a) && q.a.length >= 3 && Number.isInteger(q.c));
+}
+
+// Wire buttons
+document.getElementById('btnPrev').onclick = ()=> loadTopic(Math.max(0,currentTopic-1));
+document.getElementById('btnNext').onclick = ()=> loadTopic(Math.min(topics.length-1,currentTopic+1));
+document.getElementById('closeTest').onclick = ()=> { topicLockedDuringQuiz=false; closeTestPanel(); renderTopicsList(); updateReport(); };
+document.getElementById('submitTest').onclick = submitTest;
+
+document.getElementById('newChatBtn').onclick = ()=> {
+    const item = createNewChat('New Chat');
+    setActiveChat(item.id);
+};
+document.getElementById('modeCourse').onclick = ()=> setChatMode('course');
+document.getElementById('modeGeneral').onclick = ()=> setChatMode('general');
+
+document.getElementById('attachBtn').onclick = ()=> {
+    const input = document.getElementById('attachFile');
+    if(input) input.click();
+};
+document.getElementById('attachFile').addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    if(file.size > 20000){
+        alert('File too large. Please attach a smaller file (max 20KB).');
+        e.target.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+        const content = String(reader.result || '');
+        const input = document.getElementById('chatInput');
+        const safeName = file.name.replace(/[^a-z0-9_.-]/gi,'_');
+        input.value = `${input.value}\n\nAttached file: ${safeName}\n\`\`\`\n${content}\n\`\`\`\n`;
+        input.focus();
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+});
+
+const courseQuestionBtn = document.getElementById('courseQuestionBtn');
+const courseQuestionInput = document.getElementById('courseQuestionInput');
+if(courseQuestionBtn && courseQuestionInput){
+    courseQuestionBtn.onclick = ()=> {
+        const val = (courseQuestionInput.value || '').trim();
+        if(!val) return;
+        courseQuestionInput.value = '';
+        setChatMode('course');
+        handleUserText(val, 'course-question');
+    };
+    courseQuestionInput.addEventListener('keydown', (e)=> {
+        if(e.key === 'Enter'){ courseQuestionBtn.click(); }
+    });
+}
+
+document.getElementById('sendBtn').onclick = ()=> {
+    const input = document.getElementById('chatInput');
+    const val = (input.value||'').trim();
+    if(!val) return;
+    input.value = '';
+    handleUserText(val, 'chat-input');
+};
+document.getElementById('chatInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ document.getElementById('sendBtn').click(); }
+});
+
+function updateReport(){
+    const total = topics.length;
+    const done = completedTopics.length;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    document.getElementById('progressLabel').textContent = `${done} / ${total} topics`;
+    document.getElementById('progressBar').style.width = `${pct}%`;
+    document.getElementById('progressTag').textContent = `${pct}% Complete`;
+    document.getElementById('progressRing').style.background = `conic-gradient(#6ee7b7 0deg, #38bdf8 ${pct*3.6}deg, rgba(255,255,255,0.08) ${pct*3.6}deg)`;
+    document.getElementById('progressRingLabel').textContent = `${pct}%`;
+    document.getElementById('lastScore').textContent = lastScore === null ? 'Not attempted' : `${lastScore}%`;
+    document.getElementById('attempts').textContent = `Attempts: ${attempts}`;
+    document.getElementById('streakDays').textContent = `${done} days`;
+    if(lastScore === null){
+        document.getElementById('focusLevel').textContent = 'Steady';
+    } else if(lastScore >= 85){
+        document.getElementById('focusLevel').textContent = 'High';
+    } else if(lastScore >= 70){
+        document.getElementById('focusLevel').textContent = 'Good';
+    } else {
+        document.getElementById('focusLevel').textContent = 'Warming up';
+    }
+    const milestones = [];
+    if(done >= 1) milestones.push('First topic completed');
+    if(done >= 5) milestones.push('Foundation builder');
+    if(done >= 10) milestones.push('Core skills unlocked');
+    if(done >= 20) milestones.push('Advanced track');
+    document.getElementById('milestones').textContent = milestones.length ? milestones.join(' · ') : 'Start the first quiz to unlock milestones.';
+    if(done === 0){
+        document.getElementById('completedList').textContent = 'None yet';
+    } else {
+        const names = completedTopics.map(i => topics[i] ? topics[i].name : `Topic ${i+1}`);
+        document.getElementById('completedList').textContent = names.join(', ');
+    }
+    updateCoursePanel();
+}
+
+function updateCoursePanel(){
+    const courseName = document.getElementById('courseName');
+    const courseStatus = document.getElementById('courseStatus');
+    const currentEl = document.getElementById('currentTopicDisplay');
+    const nextEl = document.getElementById('nextTopicDisplay');
+    if(courseName) courseName.textContent = language;
+    if(!learningStarted || currentTopic < 0 || !topics.length){
+        if(courseStatus) courseStatus.textContent = 'Ready to start';
+        if(currentEl) currentEl.textContent = 'Not started';
+        if(nextEl) nextEl.textContent = 'Not started';
+        return;
+    }
+    const currentName = topics[currentTopic] ? topics[currentTopic].name : 'Unknown';
+    const nextTopic = topics[currentTopic + 1];
+    if(courseStatus) courseStatus.textContent = `Learning ${language}`;
+    if(currentEl) currentEl.textContent = currentName;
+    if(nextEl) nextEl.textContent = nextTopic ? nextTopic.name : 'No next topic';
+    renderTopicsPanel();
+}
+
+function renderTopicsPanel(){
+    const list = document.getElementById('topicsListPanel');
+    if(!list) return;
+    const sourceTopics = topics.length ? topics : getCourseStructure().topics;
+    list.innerHTML = '';
+    if(!sourceTopics.length){
+        list.innerHTML = '<div class="course-item">No topics available <span></span></div>';
+        return;
+    }
+    sourceTopics.forEach((t, i) => {
+        const div = document.createElement('div');
+        const lockedByProgress = i > 0 && !completedTopics.includes(i - 1);
+        const lockedByQuiz = topicLockedDuringQuiz && i !== currentTopic;
+        const isLocked = lockedByProgress || lockedByQuiz;
+        const isDone = completedTopics.includes(i);
+        const isCurrent = i === currentTopic && learningStarted;
+        div.className = 'course-item' + (isCurrent ? ' current' : '') + (isDone ? ' done' : '');
+        const status = isDone ? 'done' : isCurrent ? 'current' : (learningStarted && isLocked) ? 'locked' : '';
+        div.innerHTML = `<div>${i + 1}. ${t.name}</div><span>${status}</span>`;
+        if(!isLocked){
+            div.style.cursor = 'pointer';
+            div.onclick = () => loadTopic(i);
+        } else {
+            div.style.cursor = 'not-allowed';
+        }
+        list.appendChild(div);
+    });
+}
+
+function initPage(){
+    userKey = getUserKey();
+    setActiveUserBadge();
+    const savedMode = localStorage.getItem(getChatModeKey());
+    if(savedMode === 'general' || savedMode === 'course'){
+        chatMode = savedMode;
+    }
+    setChatMode(chatMode);
+    document.getElementById('courseBadge').textContent = language;
+    document.getElementById('headerStatus').textContent = `Ready to chat about ${language}`;
+    document.getElementById('chatStatus').textContent = 'Ask anything. Say "yes" to start the syllabus';
+    document.getElementById('modeTag').textContent = 'Chat Mode';
+    setNavEnabled(false);
+    renderTopicsList();
+    renderChatHistory();
+    updateReport();
+}
+
+resolveApiUrl().then(() => {
+    if(!aiOnline){
+        setChatStatus('Offline mode: local tutor replies');
+    }
+    renderTopicsPanel();
+});
+initPage();
+</script>
+</body>
+</html>
+

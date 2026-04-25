@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Smart AI Learning</title>
+    <style>
+        :root{
+            --bg:#060d1c;
+            --panel:#0f1b36;
+            --line:rgba(255,255,255,0.12);
+            --text:#e9f2ff;
+            --muted:#9cb0d7;
+            --neon:#5df1ff;
+            --green:#56f3a7;
+            --orange:#ffc260;
+            --pink:#ff6fd8;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
+            min-height:100vh;
+            color:var(--text);
+            padding:20px;
+            background:
+                radial-gradient(1000px 600px at 0% -20%, #1d3366 0%, transparent 60%),
+                radial-gradient(900px 520px at 100% 5%, #3e1f65 0%, transparent 62%),
+                linear-gradient(180deg, #050913 0%, #060d1c 100%);
+        }
+        .bg-grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(circle at center, black 30%, transparent 80%);opacity:.6}
+        nav{max-width:1200px;margin:0 auto 20px auto;border:1px solid var(--line);border-radius:16px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));position:relative;z-index:1}
+        nav h1{font-size:28px;color:var(--text);text-shadow:0 0 14px rgba(93,241,255,.35)}
+        nav a{color:var(--neon);margin:0 10px;text-decoration:none;cursor:pointer;font-weight:600}
+        .container{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+        .hero{border:1px solid var(--line);border-radius:20px;padding:18px 20px;margin-bottom:18px;background:radial-gradient(380px 160px at 8% 0%, rgba(93,241,255,.2), transparent 70%),radial-gradient(420px 170px at 100% 100%, rgba(165,109,255,.22), transparent 70%),linear-gradient(180deg, rgba(18,34,70,.92), rgba(14,26,52,.95));box-shadow:0 16px 36px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.09)}
+        h2{font-size:30px;text-align:center;margin-bottom:8px;text-shadow:0 0 16px rgba(93,241,255,.35)}
+        .hero p{color:var(--muted);text-align:center;font-size:14px}
+        .analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px}
+        .card{border:1px solid var(--line);border-radius:16px;padding:18px;background:linear-gradient(180deg, rgba(17,31,61,.9), rgba(11,20,40,.95));box-shadow:0 10px 22px rgba(0,0,0,.24)}
+        .card h3{font-size:34px;margin-bottom:10px}
+        .card h4{font-size:16px;margin-bottom:12px}
+        .stat{font-size:42px;font-weight:800;line-height:1.1;margin-bottom:6px}
+        .stat.hours{color:var(--neon);text-shadow:0 0 12px rgba(93,241,255,.45)}
+        .stat.pass{color:var(--green);text-shadow:0 0 12px rgba(86,243,167,.45)}
+        .stat.score{color:var(--orange);text-shadow:0 0 12px rgba(255,194,96,.45)}
+        .stat-label{color:var(--muted);font-size:13px}
+        .chart{height:200px;display:flex;align-items:flex-end;gap:8px;margin-top:12px;padding-bottom:24px}
+        .chart-bar{flex:1;background:linear-gradient(180deg,#3a7bff 0%, #8a4dff 100%);border-radius:8px 8px 0 0;position:relative;min-height:6px;transition:height .35s ease}
+        .chart-label{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:11px;color:var(--muted)}
+        .progress-item{margin-bottom:12px}
+        .progress-label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px}
+        .progress-label .name{color:var(--text)}
+        .progress-label .percent{color:var(--neon);font-weight:700}
+        .progress-bar{width:100%;height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+        .progress-fill{height:100%;background:linear-gradient(90deg,#3a7bff 0%, #8a4dff 100%)}
+        .timeline-item{display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+        .timeline-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+        .timeline-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,255,255,.08);border:1px solid var(--line)}
+        .timeline-content .title{font-weight:600;margin-bottom:2px}
+        .timeline-content .time{color:var(--muted);font-size:12px}
+        .empty{color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:10px;padding:12px;background:rgba(255,255,255,.03)}
+        @media (max-width:760px){body{padding:12px}nav{padding:12px;flex-direction:column;align-items:flex-start;gap:8px}nav h1{font-size:24px}h2{font-size:24px}.card h3{font-size:28px}}
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <nav>
+        <h1>Smart AI Learning</h1>
+        <div>
+            <a onclick="window.location.href='dashboard.html'">Dashboard</a>
+            <a onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h2>&#128202; Your Learning Analytics</h2>
+            <p>Live stats from your account activity only. No sample data.</p>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="card">
+                <h4>&#9201; Total Learning Hours</h4>
+                <div class="stat hours" id="totalHours">--</div>
+                <div class="stat-label" id="hoursLabel">No activity yet</div>
+            </div>
+
+            <div class="card">
+                <h4>&#9989; Tests Passed</h4>
+                <div class="stat pass" id="testsPassed">--</div>
+                <div class="stat-label" id="testsLabel">No attempts yet</div>
+            </div>
+
+            <div class="card">
+                <h4>&#127919; Average Score</h4>
+                <div class="stat score" id="avgScore">--</div>
+                <div class="stat-label" id="avgLabel">No test scores yet</div>
+            </div>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="card">
+                <h4>&#128200; Weekly Activity</h4>
+                <div class="chart" id="weeklyChart"></div>
+                <div class="stat-label" id="weeklyNote">Based on last activity timestamps.</div>
+            </div>
+
+            <div class="card">
+                <h4>&#128218; Course Progress</h4>
+                <div id="courseProgress"></div>
+            </div>
+
+            <div class="card">
+                <h4>&#128276; Recent Activity</h4>
+                <div id="recentActivity"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const token = localStorage.getItem('token');
+        const email = String(localStorage.getItem('email') || '').trim().toLowerCase();
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            window.location.href = 'index.html';
+        }
+
+        function safeDate(value) {
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function getUserKey() {
+            return email ? email.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'guest';
+        }
+
+        function getProgressKey(base, language) {
+            return `${base}_${getUserKey()}_${language}`;
+        }
+
+        function timeAgo(iso) {
+            const d = safeDate(iso);
+            if (!d) return 'unknown time';
+            const diffMs = Date.now() - d.getTime();
+            const mins = Math.max(1, Math.floor(diffMs / 60000));
+            if (mins < 60) return `${mins} min ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+            const days = Math.floor(hrs / 24);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        function formatDurationHours(hoursValue) {
+            const totalMins = Math.max(0, Math.round(Number(hoursValue || 0) * 60));
+            const hrs = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            return `${hrs}h ${mins}m`;
+        }
+
+        function buildWeeklyActivityBars(lastActivities) {
+            const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+            const counts = [0,0,0,0,0,0,0];
+            lastActivities.forEach(ts => {
+                const d = safeDate(ts);
+                if (!d) return;
+                const jsDay = d.getDay();
+                const idx = jsDay === 0 ? 6 : jsDay - 1;
+                counts[idx] += 1;
+            });
+            const max = Math.max(...counts, 1);
+            return labels.map((label, i) => ({ label, height: Math.max(8, Math.round((counts[i] / max) * 100)), value: counts[i] }));
+        }
+
+        function renderWeeklyChart(lastActivities) {
+            const chart = document.getElementById('weeklyChart');
+            chart.innerHTML = '';
+            const bars = buildWeeklyActivityBars(lastActivities);
+            bars.forEach(b => {
+                const el = document.createElement('div');
+                el.className = 'chart-bar';
+                el.style.height = `${b.height}%`;
+                el.title = `${b.label}: ${b.value} activity`;
+                el.innerHTML = `<div class="chart-label">${b.label}</div>`;
+                chart.appendChild(el);
+            });
+        }
+
+        function renderCourseProgress(progressObj, languageDetailsMap) {
+            const box = document.getElementById('courseProgress');
+            box.innerHTML = '';
+            const entries = Object.entries(progressObj || {});
+            if (!entries.length) {
+                box.innerHTML = '<div class="empty">No courses started yet.</div>';
+                return;
+            }
+            entries.forEach(([lang, data]) => {
+                const totalTopics = Number(languageDetailsMap[lang]?.topics_count || 0);
+                const completed = Array.isArray(data.completed_topics) ? data.completed_topics.length : 0;
+                const pct = totalTopics > 0 ? Math.min(100, Math.round((completed / totalTopics) * 100)) : 0;
+                const started = safeDate(data.started_at);
+                const hoursSpent = started ? Math.max(0, (Date.now() - started.getTime()) / 3600000) : 0;
+                const durationText = `${formatDurationHours(hoursSpent)} spent`;
+                const item = document.createElement('div');
+                item.className = 'progress-item';
+                item.innerHTML = `
+                    <div class="progress-label">
+                        <span class="name">${lang}</span>
+                        <span class="percent">${pct}%</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+                    <div class="stat-label" style="margin-top:6px">${durationText}</div>
+                `;
+                box.appendChild(item);
+            });
+        }
+
+        function renderRecentActivity(progressObj) {
+            const box = document.getElementById('recentActivity');
+            box.innerHTML = '';
+            const events = [];
+            Object.entries(progressObj || {}).forEach(([lang, data]) => {
+                if (data.last_activity) {
+                    const completed = Array.isArray(data.completed_topics) ? data.completed_topics.length : 0;
+                    const tests = Array.isArray(data.test_scores) ? data.test_scores.length : 0;
+                    events.push({
+                        when: data.last_activity,
+                        icon: '&#128640;',
+                        title: `Active in ${lang}: ${completed} topics completed, ${tests} tests attempted`
+                    });
+                }
+                if (data.started_at) {
+                    events.push({
+                        when: data.started_at,
+                        icon: '&#127919;',
+                        title: `Started ${lang} learning track`
+                    });
+                }
+            });
+
+            events.sort((a, b) => {
+                const da = safeDate(a.when)?.getTime() || 0;
+                const db = safeDate(b.when)?.getTime() || 0;
+                return db - da;
+            });
+
+            if (!events.length) {
+                box.innerHTML = '<div class="empty">No recent activity found.</div>';
+                return;
+            }
+
+            events.slice(0, 6).forEach(evt => {
+                const row = document.createElement('div');
+                row.className = 'timeline-item';
+                row.innerHTML = `
+                    <div class="timeline-icon">${evt.icon}</div>
+                    <div class="timeline-content">
+                        <div class="title">${evt.title}</div>
+                        <div class="time">${timeAgo(evt.when)}</div>
+                    </div>
+                `;
+                box.appendChild(row);
+            });
+        }
+
+        async function initAnalytics() {
+            try {
+                const [progressRes, languagesRes, leaderboardRes] = await Promise.all([
+                    fetch(`${API_URL}/progress/${encodeURIComponent(email)}`),
+                    fetch(`${API_URL}/languages`),
+                    fetch(`${API_URL}/leaderboard`)
+                ]);
+
+                if (!progressRes.ok) throw new Error('Failed to fetch progress');
+                const progressData = await progressRes.json().catch(() => ({}));
+                const languagesData = languagesRes.ok ? await languagesRes.json().catch(() => ({})) : {};
+                const leaderboardData = leaderboardRes.ok ? await leaderboardRes.json().catch(() => ({})) : {};
+
+                const progress = progressData.progress || {};
+                const details = Array.isArray(languagesData.details) ? languagesData.details : [];
+                const languageDetailsMap = Object.fromEntries(details.map(x => [x.name, x]));
+                const allLanguages = Array.from(new Set([
+                    ...Object.keys(progress),
+                    ...details.map(d => d.name)
+                ]));
+
+                // Merge backend progress with per-user local progress saved in learning.html.
+                allLanguages.forEach(lang => {
+                    const localCompleted = JSON.parse(localStorage.getItem(getProgressKey('completedTopics', lang)) || '[]');
+                    const localAttempts = parseInt(localStorage.getItem(getProgressKey('attempts', lang)) || '0', 10);
+                    const localLastScore = JSON.parse(localStorage.getItem(getProgressKey('lastScore', lang)) || 'null');
+
+                    if (!progress[lang]) progress[lang] = {};
+                    if (!Array.isArray(progress[lang].completed_topics)) progress[lang].completed_topics = [];
+                    const backendCompletedCount = progress[lang].completed_topics.length;
+                    const localCompletedCount = Array.isArray(localCompleted) ? localCompleted.length : 0;
+
+                    // Prefer the larger completion count so completed topics show even before backend sync.
+                    if (localCompletedCount > backendCompletedCount) {
+                        progress[lang].completed_topics = localCompleted;
+                    }
+
+                    if (!Array.isArray(progress[lang].test_scores)) progress[lang].test_scores = [];
+                    if (progress[lang].test_scores.length === 0 && localAttempts > 0 && typeof localLastScore === 'number') {
+                        progress[lang].test_scores = [localLastScore];
+                    }
+                });
+
+                let totalAttempts = 0;
+                let passed = 0;
+                let scoreSum = 0;
+                let totalHours = 0;
+                const lastActivities = [];
+
+                Object.values(progress).forEach(data => {
+                    const scores = Array.isArray(data.test_scores) ? data.test_scores : [];
+                    totalAttempts += scores.length;
+                    passed += scores.filter(s => Number(s) >= 70).length;
+                    scoreSum += scores.reduce((a, b) => a + Number(b || 0), 0);
+
+                    if (data.started_at) {
+                        const started = safeDate(data.started_at);
+                        if (started) {
+                            const hours = Math.max(0, (Date.now() - started.getTime()) / 3600000);
+                            totalHours += hours;
+                        }
+                    }
+
+                    if (data.last_activity) {
+                        lastActivities.push(data.last_activity);
+                    }
+                });
+
+                const avgScore = totalAttempts > 0 ? Math.round(scoreSum / totalAttempts) : null;
+
+                document.getElementById('totalHours').textContent = totalHours > 0 ? totalHours.toFixed(1) : '--';
+                document.getElementById('hoursLabel').textContent = totalHours > 0 ? 'hours since you started your courses' : 'No activity yet';
+
+                document.getElementById('testsPassed').textContent = totalAttempts > 0 ? String(passed) : '--';
+                document.getElementById('testsLabel').textContent = totalAttempts > 0 ? `out of ${totalAttempts} attempts` : 'No attempts yet';
+
+                document.getElementById('avgScore').textContent = avgScore !== null ? `${avgScore}%` : '--';
+                document.getElementById('avgLabel').textContent = avgScore !== null ? 'calculated from all your tests' : 'No test scores yet';
+
+                renderWeeklyChart(lastActivities);
+                renderCourseProgress(progress, languageDetailsMap);
+                renderRecentActivity(progress);
+
+                if (!lastActivities.length) {
+                    document.getElementById('weeklyNote').textContent = 'No last activity timestamps available yet.';
+                }
+
+                const lb = Array.isArray(leaderboardData.leaderboard) ? leaderboardData.leaderboard : [];
+                const me = lb.find(x => String(x.email || '').trim().toLowerCase() === email);
+                if (me && me.rank) {
+                    document.getElementById('weeklyNote').textContent = `${document.getElementById('weeklyNote').textContent} Current rank: #${me.rank}.`;
+                }
+            } catch (error) {
+                console.error('Analytics load error:', error);
+                document.getElementById('courseProgress').innerHTML = '<div class="empty">Failed to load analytics data from API.</div>';
+                document.getElementById('recentActivity').innerHTML = '<div class="empty">Failed to load activity from API.</div>';
+                renderWeeklyChart([]);
+            }
+        }
+
+        initAnalytics();
+    </script>
+</body>
+</html>
